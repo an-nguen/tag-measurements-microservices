@@ -1,0 +1,25 @@
+<h1 mat-dialog-title>Теги</h1>
+<div mat-dialog-content>
+  <div  style="display: inline-block" >
+    <select [(ngModel)]="unselectedTagsModel" style="height: 60vh; width: 30vw" multiple color="primary" >
+      <option *ngFor="let tag of leftTags" (dblclick)="this.transferToRight(tag)" [ngValue]="tag">{{tag.name}}</option>
+    </select>
+  </div>
+  <div style="display: inline-block; padding: 12px 12px 12px 12px" >
+    <div style="display: table-cell">
+      <button style="margin-bottom: 6px" mat-flat-button color="primary" (click)="transferToRight()"> >> </button>
+      <br/>
+      <button mat-flat-button color="primary" (click)="transferToLeft()"> << </button>
+    </div>
+  </div>
+
+  <div style="display: inline-block" >
+    <select [(ngModel)]="selectedTagsModel" style="height: 60vh; width: 30vw" multiple color="primary" >
+      <option *ngFor="let tag of rightTags" (dblclick)="this.transferToLeft(tag)" [ngValue]="tag">{{tag.name}}</option>
+    </select>
+  </div>
+</div>
+<div mat-dialog-actions>
+  <button mat-flat-button color="primary" (click)="apply()">Применить</button>
+  <button mat-flat-button color="warn" (click)="close()">Закрыть</button>
+</div>

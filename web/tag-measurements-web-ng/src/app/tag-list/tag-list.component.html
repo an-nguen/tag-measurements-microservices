@@ -1,0 +1,108 @@
+<mat-card>
+  <mat-card-title>Список зон</mat-card-title>
+  <mat-card-subtitle>
+    <mat-form-field appearance="outline">
+      <mat-label>Группы tag-ов</mat-label>
+      <button matPrefix color="primary" mat-icon-button name="refresh" (click)="tagManagerListService.refreshTemperatureZones()">
+        <mat-icon>update</mat-icon>
+      </button>
+      <mat-select [formControl]="warehouseGroupControl" (selectionChange)="onTemperatureZoneSelectChange($event.value)">
+        <mat-option *ngFor="let warehouseGroup of tagManagerListService.temperatureZones" [value]="warehouseGroup.id">
+          {{ warehouseGroup.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" style="float: right">
+      <mat-label>Фильтр</mat-label>
+      <input matInput (keyup)="applyFilter($event)" name="filterTextField">
+    </mat-form-field>
+  </mat-card-subtitle>
+  <mat-card-content>
+    <div class="mat-elevation-z8 scrollable">
+      <mat-progress-bar *ngIf="getLoadingWG" color="primary" mode="indeterminate">
+      </mat-progress-bar>
+      <table mat-table [dataSource]="dataSource" matSort>
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Название tag-а</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.name }}
+            <div *ngIf="element.isEmpty === true">
+              (статистические данные не собраны)
+            </div> </td>
+        </ng-container>
+        <ng-container matColumnDef="tagNumber">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Номер tag-а</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.tagNumber }}</td>
+        </ng-container>
+        <ng-container matColumnDef="uuid">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>UUID</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.uuid }}</td>
+        </ng-container>
+        <ng-container matColumnDef="verification_date">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Дата поверки</th>
+          <td mat-cell *matCellDef="let element"
+              [class.warn-row]="isWarnVerificationDate(element)"
+              [class.oversea-row]="isAfterTwoYears(element)"
+              style="text-align: right; padding-right: 16px">
+            {{ printDate(element) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="temperature">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Температура (C)</th>
+          <td mat-cell *matCellDef="let element" [class.oversea-row]="!isBetweenTemperatureLimit(element)"
+              [class.cell-value]="true">
+            {{ !element.temperature ? '-' : element.temperature.toFixed(4) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="humidity">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Влажность (%)</th>
+          <td mat-cell *matCellDef="let element" [class.cell-value]="true">
+            {{ !element.cap ? '-' : element.cap.toFixed(1) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="voltage">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Напряжение (V)</th>
+          <td mat-cell *matCellDef="let element" [class.cell-value]="true">
+            {{ !element.batteryVolt ? '-' : element.batteryVolt.toFixed(2) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="batteryRemaining">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Заряд батареи (%)</th>
+          <td mat-cell *matCellDef="let element" [class.cell-value]="true">
+           {{ !element.batteryRemaining ? '-' : (element.batteryRemaining * 100)}}</td>
+        </ng-container>
+        <ng-container matColumnDef="signaldBm">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Сигнал (dBm)</th>
+          <td mat-cell *matCellDef="let element" [class.cell-value]="true">
+            {{  !element.signaldBm ? '-' : element.signaldBm }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Действия</th>
+          <td mat-cell *matCellDef="let element" [class.cell-value]="true">
+            <button mat-icon-button (click)="editTag(element)"><mat-icon>edit</mat-icon></button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" ></tr>
+      </table>
+    </div>
+    <div *ngIf="tagManagerListService.tags.length === 0 && !!tagManagerListService.idSelected" style="margin: 40px">Нет tag-ов в этой группе. </div>
+
+    <button mat-flat-button color="primary" [matMenuTriggerFor]="menu" *ngIf="tagManagerListService.tags.length > 0">
+      <ng-container *ngIf="tagManagerListService.tags.length > 0; then displayGraphString; else selectGroupString">
+      </ng-container>
+      <ng-template #displayGraphString>
+        График...
+      </ng-template>
+      <ng-template #selectGroupString>
+        К этой группе не привязаны tag-и, либо вы ёше не выбрали группу!
+      </ng-template>
+    </button>
+    <mat-menu #menu='matMenu'>
+      <button mat-menu-item (click)="openSelectTagDialog('temperature')" [disabled]="tagManagerListService.tags.length === 0">Температуры</button>
+      <button mat-menu-item (click)="openSelectTagDialog('humidity')" [disabled]="tagManagerListService.tags.length === 0">Влажности</button>
+      <button mat-menu-item (click)="openSelectTagDialog('signal')" [disabled]="tagManagerListService.tags.length === 0">Уровень сигнала</button>
+      <button mat-menu-item (click)="openSelectTagDialog('batteryVolt')" [disabled]="tagManagerListService.tags.length === 0">Напряжение</button>
+    </mat-menu>
+  </mat-card-content>
+</mat-card>
+

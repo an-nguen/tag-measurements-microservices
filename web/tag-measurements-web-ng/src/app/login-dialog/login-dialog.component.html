@@ -1,0 +1,20 @@
+<mat-card class="center card-container">
+    <mat-card-title>
+        LOGIN
+    </mat-card-title>
+    <form #f="ngForm" (ngSubmit)="login(f)">
+        <mat-card-content>
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-icon matPrefix>person</mat-icon>
+                <input matInput placeholder="Имя пользователя" type="text" [(ngModel)]="usernameValue" name="usernameTextField" required>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-icon matPrefix>vpn_key</mat-icon>
+                <input matInput placeholder="Пароль" type="password" [(ngModel)]="passwordValue" name="passwordTextField" required>
+            </mat-form-field>
+        </mat-card-content>
+        <mat-card-actions>
+            <button mat-flat-button color="primary">Войти</button>
+        </mat-card-actions>
+    </form>
+</mat-card>

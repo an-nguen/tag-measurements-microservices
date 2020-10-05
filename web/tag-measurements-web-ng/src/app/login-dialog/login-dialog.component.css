@@ -1,0 +1,13 @@
+.center {
+    margin: auto;
+    width: 40%;
+}
+
+.full-width {
+    width: 100%;
+}
+
+.card-container {
+    align-items: center;
+    text-align: center;
+}

@@ -1,0 +1,8 @@
+web/**
+build
+.idea
+.gitignore
+.git
+sql
+README.md
+Thermo-WH.iml

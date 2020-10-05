@@ -1,0 +1,8 @@
+{
+  "host": "10.10.1.6",
+  "port": "5432",
+  "user": "an",
+  "password": "a4ryFcFQLz",
+  "db_name": "tag_measurements",
+  "n_days": 40
+}

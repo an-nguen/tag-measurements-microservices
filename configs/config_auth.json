@@ -1,0 +1,11 @@
+{
+  "host": "10.10.1.6",
+  "port": "5432",
+  "user": "an",
+  "password": "a4ryFcFQLz",
+  "db_name": "tag_users",
+  "server_port": "10120",
+  "hmac_secret": "Wle3E<c26JF/3G-+Y;,4sb8SmX]BF]",
+  "allow_origin": "http://localhost:4200",
+  "amqp_uri": ""
+}

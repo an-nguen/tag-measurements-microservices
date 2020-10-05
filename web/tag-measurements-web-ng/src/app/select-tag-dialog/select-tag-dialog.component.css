@@ -1,0 +1,12 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.custom-div-height {
+  height: 40vh;
+}
+
+.mat-form-field {
+  margin-right: 10px;
+}

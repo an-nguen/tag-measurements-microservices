@@ -1,0 +1,87 @@
+<mat-tab-group>
+  <mat-tab label="Изменить">
+    <h3>Изменение существующей группы</h3>
+    <mat-form-field appearance="outline">
+      <mat-label>Выберите группу</mat-label>
+      <mat-select [formControl]="selectTemperatureZoneFormControl" (selectionChange)="onTemperatureZoneChange($event.value)">
+        <ng-container *ngFor="let warehouseGroup of temperatureZones">
+          <mat-option  [value]="warehouseGroup">
+            {{warehouseGroup.name}}
+          </mat-option>
+        </ng-container>
+      </mat-select>
+    </mat-form-field>
+    <ng-container *ngIf="selectTemperatureZoneFormControl.value === null; then isNotSelected; else isSelected">
+    </ng-container>
+    <ng-template #isNotSelected>
+      <div></div>
+    </ng-template>
+    <ng-template #isSelected>
+      <form #fe="ngForm">
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Название</mat-label>
+          <input matInput [(ngModel)]='editNameValue' name="editNameValue" placeholder="Название..." required/>
+        </mat-form-field>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Нижний температурный предел</mat-label>
+          <input matInput [(ngModel)]='editLowerTempLimitValue' type="number" name="editLowerTempLimitValue" required/>
+        </mat-form-field>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Верхний температурный предел</mat-label>
+          <input matInput [(ngModel)]='editHigherTempLimitValue' type="number"  name="editHigherTempLimitValue" required/>
+        </mat-form-field>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Описание</mat-label>
+          <textarea matInput [(ngModel)]='editDescriptionValue' name="editDescriptionValue" placeholder="Описание..." required></textarea>
+        </mat-form-field>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Электронные почты для уведомления о превышений лимитов</mat-label>
+          <input matInput [(ngModel)]="editNotifyEmails" name="editNotifyEmails" required/>
+        </mat-form-field>
+        <div class="full-width" style="margin-bottom: 6px">
+          <mat-label style="margin-right: 6px">Теги</mat-label>
+          <button mat-flat-button color="primary" style="margin-right: 6px" (click)="selectTag('edit')">Выбрать</button>
+          <mat-form-field class="full-width" appearance="outline">
+            <mat-label>Теги</mat-label>
+            <input matInput [value]="getSelectedTagsString()" dense readonly />
+          </mat-form-field>
+        </div>
+        <button mat-flat-button color="primary" (click)="editTemperatureZone(fe)">Применить изменение</button>
+      </form>
+    </ng-template>
+  </mat-tab>
+  <mat-tab label="Создать">
+    <h3>Создать группу склада</h3>
+    <form #f="ngForm" class="create-warehouse-group" (ngSubmit)="createTemperatureZone(f)">
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Название группы</mat-label>
+        <input matInput ngModel placeholder="Название..." name="createNameValue" required/>
+      </mat-form-field>
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Описание</mat-label>
+        <textarea matInput ngModel placeholder="Описание..." name="createDescriptionValue"></textarea>
+      </mat-form-field>
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Нижний температурный предел</mat-label>
+        <input matInput ngModel type="number" name="createLowerTempLimitValue" required/>
+      </mat-form-field>
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Верхний температурный предел</mat-label>
+        <input matInput ngModel type="number" name="createHigherTempLimitValue" required/>
+      </mat-form-field>
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Электронные почты для уведомления о превышений лимитов</mat-label>
+        <input matInput ngModel name="createNotifyEmails" required/>
+      </mat-form-field>
+      <div class="full-width" style="margin-bottom: 6px">
+        <mat-label style="margin-right: 6px">Теги</mat-label>
+        <button mat-flat-button color="primary" style="margin-right: 6px" (click)="selectTag('create')">Выбрать</button>
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Теги</mat-label>
+          <input matInput [value]="getSelectedTagsString()" dense readonly />
+        </mat-form-field>
+      </div>
+      <button mat-flat-button color="primary">Создать группу</button>
+    </form>
+  </mat-tab>
+</mat-tab-group>

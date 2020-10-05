@@ -1,0 +1,59 @@
+<mat-toolbar color="primary">
+  <span style="margin-right: 16px">
+    <mat-icon>
+      assessment
+    </mat-icon>
+    THERMO-NG
+  </span>
+  <ng-container>
+    <ng-container>
+      <button mat-flat-button color="primary" [routerLink]="['/']">
+        <mat-icon>view_list</mat-icon>
+        Зоны
+      </button>
+    </ng-container>
+    <ng-container>
+      <button mat-flat-button color="primary" [routerLink]="['warehouse-settings']">
+        <mat-icon>settings</mat-icon>
+        Настройка зон
+      </button>
+    </ng-container>
+    <ng-container>
+      <button mat-flat-button color="primary" [routerLink]="['wst-accounts']">
+        <mat-icon>people</mat-icon>
+        WST аккаунты
+      </button>
+    </ng-container>
+  </ng-container>
+  <span class="spacer"></span>
+  <ng-container *ngIf="roleService.isAdmin()">
+    <button mat-flat-button color="primary" (click)="router.navigate(['admin-settings'])">
+      <mat-icon>admin_panel_settings</mat-icon>
+      Панель администратора
+    </button>
+  </ng-container>
+  <ng-container *ngIf="authService.isAuthenticated === true">
+    <button mat-flat-button color="primary">
+      <mat-icon>account_box</mat-icon>
+      {{ authService.username }}
+    </button>
+    <button mat-flat-button color="primary" (click)="authService.logout()" [routerLink]="['/login']">
+      <mat-icon>exit_to_app</mat-icon>
+      Выйти
+    </button>
+  </ng-container>
+  <ng-container *ngIf="authService.isAuthenticated === false">
+    <button mat-flat-button color="primary" [routerLink]="['/login']">
+      <mat-icon>login</mat-icon>
+      Войти
+    </button>
+  </ng-container>
+</mat-toolbar>
+<mat-progress-bar *ngIf="loadingService.getLoading()" color="primary" mode="indeterminate">
+</mat-progress-bar>
+
+<div [class]="!loadingService.getLoading() ? 'container' : 'blurredContainer'" (blur)="loadingService.getLoading()">
+  <router-outlet></router-outlet>
+</div>
+
+

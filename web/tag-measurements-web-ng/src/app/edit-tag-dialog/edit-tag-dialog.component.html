@@ -1,0 +1,13 @@
+<h1 mat-dialog-title>Редактирование данных тега</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="outline">
+    <mat-label>Дата поверки тега</mat-label>
+    <input matInput [matDatepicker]="verificationDatepicker" [(ngModel)]="verificationDate" [readOnly] name="verificationDateValue"/>
+    <mat-datepicker-toggle matSuffix [for]="verificationDatepicker"></mat-datepicker-toggle>
+    <mat-datepicker #verificationDatepicker></mat-datepicker>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-flat-button type="button" color="primary" (click)="editTag()">Изменить</button>
+  <button mat-flat-button type="button" color="warn" (click)="dialogRef.close()">Закрыть</button>
+</div>

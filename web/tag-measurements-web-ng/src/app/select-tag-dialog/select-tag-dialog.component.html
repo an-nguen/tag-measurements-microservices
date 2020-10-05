@@ -1,0 +1,59 @@
+<h1 mat-dialog-title>Выберите tag-и</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="outline" style="width: 100%">
+    <mat-label>Фильтр</mat-label>
+    <input matInput (keyup)="applyFilter($event)" name="filterTextField">
+  </mat-form-field>
+</div>
+<div mat-dialog-content class="custom-div-height">
+  <table class="full-width" mat-table [dataSource]="dataSource" matSort>
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef>
+        <mat-checkbox (change)="$event ? masterToggle() : null"
+                      [checked]="plotService.tagSelection.hasValue() && isAllSelected()"
+                      [indeterminate]="plotService.tagSelection.hasValue() && !isAllSelected()"
+                      color="primary"
+        ></mat-checkbox>
+      </th>
+      <td mat-cell *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()"
+                      (change)="$event ? plotService.tagSelection.toggle(row) : null"
+                      [checked]="plotService.tagSelection.isSelected(row)"
+                      color="primary"
+        ></mat-checkbox>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Название tag-а</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.name }}
+        <div *ngIf="element.isEmpty === true">
+          (статистические данные не собраны)
+        </div> </td>
+    </ng-container>
+    <ng-container matColumnDef="tagNumber">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Номер tag-а</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.tagNumber }}</td>
+    </ng-container>
+    <ng-container matColumnDef="uuid">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>UUID</th>
+      <td mat-cell *matCellDef="let element">
+        {{ element.uuid }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+</div>
+<div mat-dialog-actions>
+  <form #fb="ngForm">
+    <app-selection-type-btn-group></app-selection-type-btn-group>
+    <div class="full-width">
+      <button mat-flat-button color="primary" (click)="onBuildClick()"
+              [disabled]="!fb.valid || !plotService.selectType || !plotService.tagSelection.hasValue()">Построить</button>
+      <button mat-flat-button color="warn" (click)="onCancelClick()">Отмена</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,34 @@
+<div class="flex">
+  <ng-container *ngIf="plotService.plotlyGraph.data.length > 0; then showGraph; else showNothing"></ng-container>
+  <ng-template #showGraph>
+    <div class="flex-item">
+      <div style="display: block;">
+        <plotly-plot [data]="plotService.plotlyGraph.data"
+                     [layout]="plotService.plotlyGraph.layout"
+                     [config]="plotService.plotlyGraph.options"
+                     (relayout)="plotService.onRelayout($event)"
+                     [divId]="plotService.mainPlot"
+        >
+        </plotly-plot>
+      </div>
+      <ng-container>
+        <form #f="ngForm">
+          <app-selection-type-btn-group></app-selection-type-btn-group>
+          <ng-container *ngIf="!f.valid || !plotService.selectType">
+            Вам нужно выбрать промежуток
+          </ng-container>
+          <div>
+            <button mat-flat-button color="primary" (click)="rebuild()" [disabled]="!f.valid || !plotService.selectType">Перестроить</button>
+            <button mat-flat-button color="accent" (click)="loadCSVfile()" [disabled]="!f.valid || !plotService.selectType">Загрузить CSV файл</button>
+          </div>
+        </form>
+      </ng-container>
+
+    </div>
+  </ng-template>
+  <ng-template #showNothing>
+    <p>Вы не выбрали tag-и...</p>
+    <button mat-flat-button color="primary" (click)="routingService.gotoMainPage()">Вернуться к главной странице</button>
+  </ng-template>
+
+</div>

@@ -1,0 +1,17 @@
+<mat-card>
+  <mat-card-title>Управление пользователями</mat-card-title>
+  <mat-card-content>
+    <form #fcu="ngForm" (ngSubmit)="createUser(fcu)">
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Имя пользователя</mat-label>
+        <input matInput [(ngModel)]='createUsernameValue' name="createUsernameValue" placeholder="Название..." required/>
+      </mat-form-field>
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Пароль</mat-label>
+        <mat-icon matPrefix>vpn_key</mat-icon>
+        <input matInput type="password" [(ngModel)]="createPasswordValue" name="createPasswordValue" placeholder="Пароль..." required/>
+      </mat-form-field>
+      <button mat-flat-button (click)="createUser(fcu)" color="primary">Создать</button>
+    </form>
+  </mat-card-content>
+</mat-card>
