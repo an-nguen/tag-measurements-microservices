@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/repository"
-	"Thermo-WH/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/repository"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 type TemperatureZoneController struct {

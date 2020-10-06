@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/pkg/models"
 )
 
 type JWTAuthMiddleware struct {

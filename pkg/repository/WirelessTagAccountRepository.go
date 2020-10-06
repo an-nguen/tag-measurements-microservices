@@ -5,7 +5,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
 
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/pkg/models"
 )
 
 type WstAccountRepository struct {

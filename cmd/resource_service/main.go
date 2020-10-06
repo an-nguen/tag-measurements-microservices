@@ -1,20 +1,20 @@
 package main
 
 import (
-	"Thermo-WH/pkg"
 	"fmt"
 	"log"
 	"os"
+	"tag-measurements-microservices/pkg"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"Thermo-WH/internal/resource_service/controllers"
-	structures "Thermo-WH/internal/resource_service/structures"
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/repository"
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/internal/resource_service/controllers"
+	structures "tag-measurements-microservices/internal/resource_service/structures"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/repository"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 var appConfig = structures.ReadAppConfig("/configs/config_resource.json")
@@ -30,12 +30,7 @@ var tagManagerController = controllers.TagManagerController{
 var tagTempDataController = controllers.MeasurementController{
 	Repository: repository.MeasurementRepository{DataSource: db},
 }
-var signalMeasurementController = controllers.SignalMeasurementController{
-	Repository: repository.SignalTagDataRepository{DataSource: db},
-}
-var voltageMeasurementController = controllers.VoltageMeasurementController{
-	Repository: repository.VoltageTagDataRepository{DataSource: db},
-}
+
 var temperatureZoneController = controllers.TemperatureZoneController{
 	Repository: repository.WarehouseGroupRepository{DataSource: db},
 }
@@ -47,7 +42,7 @@ var userController = controllers.UserController{
 }
 var roleController = controllers.RoleController{
 	Secret:     appConfig.HmacSecret,
-	Repository: repository.UserRepository{DataSource: userDb},
+	Repository: repository.RoleRepository{DataSource: userDb},
 }
 
 func main() {
@@ -92,17 +87,9 @@ func main() {
 		tagsAPI.PUT("/:id", tagController.UpdateTag)
 		tagsAPI.GET("/latest", tagController.GetLatestTagDetails)
 	}
-	temperatureTagsAPI := api.Group("/measurements")
+	measurementAPI := api.Group("/measurements")
 	{
-		temperatureTagsAPI.GET("", tagTempDataController.GetTempByUUID)
-	}
-	voltageDataAPI := api.Group("/voltageTagData")
-	{
-		voltageDataAPI.GET("", voltageMeasurementController.GetVoltageByUUID)
-	}
-	signalDataAPI := api.Group("/signalTagData")
-	{
-		signalDataAPI.GET("", signalMeasurementController.GetSignalByUUID)
+		measurementAPI.GET("", tagTempDataController.GetTempByUUID)
 	}
 	temperatureZoneAPI := api.Group("/temperatureZones")
 	{
@@ -123,13 +110,25 @@ func main() {
 		wstAccountsAPI.PUT("/:id", wirelessTagAccountController.UpdateAccount)
 		wstAccountsAPI.DELETE("/:id", wirelessTagAccountController.DeleteAccount)
 	}
-	userAPI := api.Group("/users")
+	userAPI := api.Group("/user")
+	userAPI.Use(authMiddleware.NewWithRole("ADMIN"))
 	{
+		userAPI.GET("", userController.GetUsers)
 		userAPI.POST("", userController.CreateUser)
+		userAPI.PUT("/:id", userController.UpdateUser)
+		userAPI.DELETE("/:id", userController.DeleteUser)
 	}
-	roleAPI := api.Group("/roles")
+	rolesAPI := api.Group("/roles")
 	{
-		roleAPI.GET("/token", roleController.GetRolesByToken)
+		rolesAPI.GET("/token", roleController.GetRolesByToken)
+	}
+	roleAPI := api.Group("/role")
+	roleAPI.Use(authMiddleware.NewWithRole("ADMIN"))
+	{
+		roleAPI.GET("", roleController.GetRoles)
+		roleAPI.POST("", roleController.CreateRole)
+		roleAPI.PUT("/:id", roleController.UpdateRole)
+		roleAPI.DELETE("/:id", roleController.DeleteRole)
 	}
 
 	err := router.Run(fmt.Sprintf(":%s", appConfig.ServerPort))

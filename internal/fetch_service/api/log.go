@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"Thermo-WH/pkg/dto"
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/pkg/dto"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 type ReqOpts struct {

@@ -18,7 +18,7 @@
         Настройка зон
       </button>
     </ng-container>
-    <ng-container>
+    <ng-container *ngIf="roleService.isAdmin()">
       <button mat-flat-button color="primary" [routerLink]="['wst-accounts']">
         <mat-icon>people</mat-icon>
         WST аккаунты

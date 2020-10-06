@@ -5,7 +5,7 @@ import (
 )
 
 type TagManager struct {
-	Mac   string `json:"mac" gorm:"type:varchar(17);not_null;primary_key"`
+	Mac   string `json:"mac" gorm:"type:macaddr;not_null;primary_key"`
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }

@@ -9,14 +9,14 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/repository"
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/repository"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 type RoleController struct {
 	Secret     string
-	Repository repository.UserRepository
+	Repository repository.RoleRepository
 }
 
 func (c RoleController) GetRolesByToken(ctx *gin.Context) {
@@ -65,4 +65,70 @@ func (c RoleController) GetRolesByToken(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"roles": user.Roles})
+}
+
+func (c RoleController) GetRoles(ctx *gin.Context) {
+	roles, err := c.Repository.GetRoles()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, roles)
+}
+
+func (c RoleController) CreateRole(ctx *gin.Context) {
+	var jsonReq models.Role
+	if err := ctx.ShouldBindJSON(&jsonReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	role, err := c.Repository.CreateRole(jsonReq)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, role)
+}
+
+func (c RoleController) UpdateRole(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var jsonReq models.Role
+	if err := ctx.ShouldBindJSON(&jsonReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	jsonReq.ID = uint(id)
+	role, err := c.Repository.UpdateRole(jsonReq)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, role)
+}
+
+func (c RoleController) DeleteRole(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = c.Repository.DeleteRole(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, "")
 }

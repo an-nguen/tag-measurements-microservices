@@ -1,0 +1,23 @@
+<h1 mat-dialog-title>
+  <ng-container *ngIf="data.mode === 'edit'">
+    Редактирование данных пользователя
+  </ng-container>
+  <ng-container *ngIf="data.mode === 'create'">
+    Добавление пользователя
+  </ng-container>
+</h1>
+<div mat-dialog-content>
+  <mat-form-field class="full-width" appearance="outline">
+    <mat-label>Имя пользователя</mat-label>
+    <input matInput type="text" [(ngModel)]="usernameValue" name="usernameValue">
+  </mat-form-field>
+  <mat-form-field class="full-width" appearance="outline">
+    <mat-label>Пароль</mat-label>
+    <input matInput type="password" [(ngModel)]="passwordValue" name="passwordValue">
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-flat-button type="button" color="primary" *ngIf="data.mode === 'edit'" (click)="editUser()"><mat-icon prefix>edit</mat-icon>Изменить</button>
+  <button mat-flat-button type="button" color="primary" *ngIf="data.mode === 'create'" (click)="createUser()"><mat-icon prefix>add</mat-icon>Создать</button>
+  <button mat-flat-button type="button" color="warn" (click)="dialogRef.close()">Закрыть</button>
+</div>

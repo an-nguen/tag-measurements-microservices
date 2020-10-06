@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"Thermo-WH/pkg/dto"
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/pkg/dto"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 /*		Public function: GetTagList

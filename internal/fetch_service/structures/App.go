@@ -1,8 +1,8 @@
 package structures
 
 import (
-	"Thermo-WH/internal/fetch_service/api"
 	"sync"
+	"tag-measurements-microservices/internal/fetch_service/api"
 
 	"github.com/jinzhu/gorm"
 )

@@ -53,6 +53,7 @@ import {TemperatureZoneSettingsSelectTagsDialogComponent} from './temperature-zo
 import {MatGridListModule} from "@angular/material/grid-list";
 import {WirelessTagAccountsEditDialogComponent} from './wireless-tag-accounts-edit-dialog/wireless-tag-accounts-edit-dialog.component';
 import {AdminSettingsComponent} from './admin-settings/admin-settings.component';
+import { EditUserDialogComponent } from './edit-user-dialog/edit-user-dialog.component';
 
 PlotlyModule.plotlyjs = PlotlyJS;
 PlotlyJS.register(locale);
@@ -74,6 +75,7 @@ PlotlyJS.setPlotConfig({locale: 'ru'});
     TemperatureZoneSettingsSelectTagsDialogComponent,
     WirelessTagAccountsEditDialogComponent,
     AdminSettingsComponent,
+    EditUserDialogComponent,
   ],
   imports: [
     BrowserModule,

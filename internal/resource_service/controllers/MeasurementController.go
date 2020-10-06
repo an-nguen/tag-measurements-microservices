@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"Thermo-WH/pkg/repository"
+	"tag-measurements-microservices/pkg/repository"
 )
 
 type MeasurementController struct {

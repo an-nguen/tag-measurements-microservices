@@ -1,4 +1,4 @@
-# Thermo-WH
+# tag-measurements-microservices
 Temperature monitoring system  
 # Architecture
 Common work scheme:  
@@ -11,7 +11,7 @@ Common work scheme:
                           HTTP Response + JSON      |      |
 	                                    |           |      |
 	 +-------------------------+        ˅     +-----˅------+------+
-	 |     Wirelesstag API     +------------->+   Thermo-WH APP   |
+	 |     Wirelesstag API     +------------->+   tag-measurements-microservices APP   |
 	 |     wirelesstag.com     +<-------------+   Web API (REST)  +<-------+
 	 +-------------------------+        ˄     +-------------------+        |
 	                                    |                                  |<--JSON 

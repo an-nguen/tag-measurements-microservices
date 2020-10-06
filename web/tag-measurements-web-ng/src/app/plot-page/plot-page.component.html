@@ -6,7 +6,6 @@
         <plotly-plot [data]="plotService.plotlyGraph.data"
                      [layout]="plotService.plotlyGraph.layout"
                      [config]="plotService.plotlyGraph.options"
-                     (relayout)="plotService.onRelayout($event)"
                      [divId]="plotService.mainPlot"
         >
         </plotly-plot>

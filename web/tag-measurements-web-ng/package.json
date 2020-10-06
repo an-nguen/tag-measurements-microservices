@@ -1,6 +1,6 @@
 {
   "name": "tag-measurements-web-ng",
-  "version": "0.1.1",
+  "version": "0.1.5",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

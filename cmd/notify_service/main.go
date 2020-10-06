@@ -13,9 +13,9 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"Thermo-WH/internal/notify_service/structures"
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/internal/notify_service/structures"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/models"
 )
 
 var FILENAME = "/configs/config_notify.json"

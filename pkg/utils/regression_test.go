@@ -7,8 +7,8 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/repository"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/repository"
 )
 
 var db = datasource.InitDatabaseConnection("127.0.0.1", "5432", "an",

@@ -6,8 +6,8 @@ import (
 	"github.com/lib/pq"
 	"time"
 
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 type MeasurementRepository struct {

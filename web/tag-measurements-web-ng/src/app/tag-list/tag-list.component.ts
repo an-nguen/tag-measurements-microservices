@@ -43,7 +43,7 @@ export class TagListComponent implements OnInit {
 
       });
     this.tagManagerListService.refreshTemperatureZones();
-    this.roleService.getRoles();
+    this.roleService.getRoleByToken();
   }
 
   onTemperatureZoneSelectChange(id: number) {
@@ -70,7 +70,6 @@ export class TagListComponent implements OnInit {
     return this.getWGSelected.lower_temp_limit < tag.temperature && this.getWGSelected.higher_temp_limit > tag.temperature
   }
 
-  // < 2 weeks
   isWarnVerificationDate(tag: Tag) {
     if (!!tag.verification_date) {
       const endLimit = moment(tag.verification_date).add(2, 'y');

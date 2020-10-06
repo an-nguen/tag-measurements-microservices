@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/repository"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/repository"
 )
 
 type WirelessTagAccountController struct {

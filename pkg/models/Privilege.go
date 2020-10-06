@@ -1,6 +1,6 @@
 package models
 
-type Permission struct {
+type Privilege struct {
 	ID    uint    `json:"id" gorm:"type:serial;primary_key"`
 	Name  string  `json:"name" gorm:"size:256;unique"`
 	Value string  `json:"description" gorm:"size:256"`

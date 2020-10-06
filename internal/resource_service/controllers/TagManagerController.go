@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/repository"
-	"Thermo-WH/pkg/utils"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/repository"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 type TagManagerController struct {

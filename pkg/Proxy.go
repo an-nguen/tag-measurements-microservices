@@ -1,17 +1,18 @@
 package pkg
 
 import (
-	"Thermo-WH/internal/fetch_service/api"
-	structures2 "Thermo-WH/internal/notify_service/structures"
-	"Thermo-WH/internal/resource_service/structures"
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/dto"
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/repository"
-	"Thermo-WH/pkg/utils"
 	"github.com/jinzhu/gorm"
 	"log"
 	"net/http"
+	"sync"
+	"tag-measurements-microservices/internal/fetch_service/api"
+	structures2 "tag-measurements-microservices/internal/notify_service/structures"
+	"tag-measurements-microservices/internal/resource_service/structures"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/dto"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/repository"
+	"tag-measurements-microservices/pkg/utils"
 	"time"
 )
 
@@ -103,8 +104,14 @@ func (p *ProxyService) initWstClients() {
 }
 
 func (p *ProxyService) Start() {
+	var mutex sync.Mutex
 	go func() {
 		for {
+			mutex.Lock()
+			p.DataDb.Find(&p.WirelessTagAccounts)
+			p.initWstClients()
+			mutex.Unlock()
+
 			p.Tags = p.Tags[:0]
 			for _, client := range p.WstClients {
 				res, err := client.GetTagList()

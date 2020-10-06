@@ -5,7 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/pkg/models"
 )
 
 type WarehouseGroupRepository struct {
@@ -40,7 +40,7 @@ func (r WarehouseGroupRepository) UpdateTemperatureZone(group models.Temperature
 	groupDb.HigherTempLimit = group.HigherTempLimit
 	groupDb.NotifyEmails = group.NotifyEmails
 	groupDb.Tags = group.Tags
-	r.DataSource.Save(groupDb)
+	r.DataSource.Save(&groupDb)
 	r.DataSource.Model(&groupDb).Association("Tags").Replace(group.Tags)
 
 	return group, nil

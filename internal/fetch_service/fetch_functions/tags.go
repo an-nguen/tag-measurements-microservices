@@ -1,8 +1,8 @@
 package fetch_functions
 
 import (
-	"Thermo-WH/internal/fetch_service/api"
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/internal/fetch_service/api"
+	"tag-measurements-microservices/pkg/models"
 )
 
 /*

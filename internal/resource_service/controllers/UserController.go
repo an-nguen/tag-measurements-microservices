@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/repository"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/repository"
 )
 
 type UserController struct {
@@ -27,6 +27,7 @@ func (c UserController) CreateUser(ctx *gin.Context) {
 		return
 	}
 
+	user.Password = ""
 	ctx.JSON(http.StatusOK, user)
 }
 
@@ -63,4 +64,14 @@ func (c UserController) DeleteUser(ctx *gin.Context) {
 	}
 
 	err = c.Repository.DeleteUser(id)
+}
+
+func (c UserController) GetUsers(ctx *gin.Context) {
+	users, err := c.Repository.GetUsers()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, users)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/pkg/models"
 )
 
 type UserRepository struct {
@@ -112,4 +112,12 @@ func (repo UserRepository) DeleteUser(id int) error {
 	} else {
 		return nil
 	}
+}
+
+func (repo UserRepository) GetUsers() ([]models.User, error) {
+	var users []models.User
+	if err := repo.DataSource.Select("username").Find(&users).Error; err != nil {
+		return []models.User{}, err
+	}
+	return users, nil
 }

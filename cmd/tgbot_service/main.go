@@ -1,14 +1,14 @@
 package main
 
 import (
-	"Thermo-WH/internal/tgbot_service/structures"
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/models"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jinzhu/gorm"
 	"log"
 	"os"
+	"tag-measurements-microservices/internal/tgbot_service/structures"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/models"
 	"time"
 )
 

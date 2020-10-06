@@ -8,7 +8,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	utils "Thermo-WH/internal/fetch_service/structures"
+	utils "tag-measurements-microservices/internal/fetch_service/structures"
 )
 
 var wg sync.WaitGroup

@@ -7,8 +7,6 @@ import * as moment from 'moment';
 import {LoadingService} from './loading.service';
 import {downloadCSVFile, vh} from '../_utils/conv';
 import {SelectionModel} from '@angular/cdk/collections';
-import {SignalDataService} from "./signal-data.service";
-import {VoltageDataService} from "./voltage-data.service";
 import {Measurement} from "../_domains/measurement";
 import {approximateTagData} from "../_helpers/DouglasPeucker";
 
@@ -72,12 +70,10 @@ export class PlotService {
   mainPlot: any;
 
   constructor(
-      private temperatureDataService: MeasurementService,
-      private signalDataService: SignalDataService,
-      private voltageDataService: VoltageDataService,
-      private routingService: RoutingService,
-      private loadingService: LoadingService,
-      private errorNotifyService: ErrorNotifyService,
+    private measurementService: MeasurementService,
+    private routingService: RoutingService,
+    private loadingService: LoadingService,
+    private errorNotifyService: ErrorNotifyService,
   ) {
     window.onresize = (e) => {
       this.plotlyGraph.layout.height = vh(80);
@@ -95,12 +91,12 @@ export class PlotService {
   }
 
   public setTags(
-      {
-        tags = new Array<Tag>(),
-        dataType = 'temperature',
-        action = 'nothing',
-      }
-          : {tags: Tag[], dataType: string, action: string}) {
+    {
+      tags = new Array<Tag>(),
+      dataType = 'temperature',
+      action = 'nothing',
+    }
+      : {tags: Tag[], dataType: string, action: string}) {
     // Create uuid list
     const uuidList = [];
     this.tagSelection.selected.forEach(tag => {
@@ -125,112 +121,110 @@ export class PlotService {
       }
     }
 
-    if (dataType === 'temperature' || dataType === 'humidity') {
-      this.temperatureDataService.getTemperatureDataByUUID(uuidList,
-          this.startDate.toISOString(),
-          this.endDate.toISOString(),
-          epsilon)
-          .subscribe((response: Measurement[]) => {
-            this.clearData();
-            this.checkResponse(response, uuidList);
-            if (response.length > 0) {
-              const tagsUUIDWithNoData = [];
-              const tagsWithData = [];
-              // Handle tags - remove tags with no data
-              for (const tag of this.tagSelection.selected) {
-                if (response.filter((val) => val.tag_uuid === tag.uuid)
-                    .length === 0) {
-                  tagsUUIDWithNoData.push(tag.uuid);
-                } else {
-                  tagsWithData.push(tag);
-                }
+    if (dataType) {
+      this.measurementService.getTemperatureDataByUUID(uuidList,
+        this.startDate.toISOString(),
+        this.endDate.toISOString(),
+        epsilon)
+        .subscribe((response: Measurement[]) => {
+          this.clearData();
+          this.checkResponse(response, uuidList);
+          if (response.length > 0) {
+            const tagsUUIDWithNoData = [];
+            const tagsWithData = [];
+            // Handle tags - remove tags with no data
+            for (const tag of this.tagSelection.selected) {
+              if (response.filter((val) => val.tag_uuid === tag.uuid)
+                .length === 0) {
+                tagsUUIDWithNoData.push(tag.uuid);
+              } else {
+                tagsWithData.push(tag);
               }
+            }
 
+            if (dataType === 'temperature') {
+              this.plotlyGraph.layout.title = 'Зависимость температуры T от времени t';
+              this.plotlyGraph.layout.yaxis.title.text = 'Температура (°С)';
+            } else if (dataType === 'humidity') {
+              this.plotlyGraph.layout.title = 'Зависимость влажности h от времени t';
+              this.plotlyGraph.layout.yaxis.title.text = 'Влажность (%)';
+              this.plotlyGraph.layout.yaxis.range = [0, 100];
+              this.plotlyGraph.layout.yaxis.dtick = 5;
+            } else if (dataType === 'signal') {
+              this.plotlyGraph.layout.title = 'Зависимость уровня сигнала от времени t';
+              this.plotlyGraph.layout.yaxis.title.text = 'Сигнал (dbm)';
+            } else if (dataType === 'batteryVolt') {
+              this.plotlyGraph.layout.title = 'Зависимость напряжение от времени t';
+              this.plotlyGraph.layout.yaxis.title.text = 'Напряжение (V)';
+            }
+
+            tagsWithData.forEach(tag => {
+              const newData = {
+                name: tag.name,
+                x: [],
+                y: [],
+                type: 'scattergl',
+                mode: 'lines+markers',
+                yDataType: null,
+                hovertemplate: "<b>%{fullData.name}</b>" +
+                  "<br><b>Время</b>: %{x|%d.%m.%Y %H:%m}<br>",
+              };
               if (dataType === 'temperature') {
-                this.plotlyGraph.layout.title = 'Зависимость температуры T от времени t';
-                this.plotlyGraph.layout.yaxis.title.text = 'Температура (°С)';
+                newData.yDataType = 'temperature';
+                newData.hovertemplate += "<b>Температура</b>: %{y:.1f}<br><extra></extra>";
               } else if (dataType === 'humidity') {
-                this.plotlyGraph.layout.title = 'Зависимость влажности h от времени t';
-                this.plotlyGraph.layout.yaxis.title.text = 'Влажность (%)';
-                this.plotlyGraph.layout.yaxis.range = [0, 100];
-                this.plotlyGraph.layout.yaxis.dtick = 5;
+                newData.yDataType = 'humidity';
+                newData.hovertemplate += "<b>Влажность</b>: %{y:.1f} %<br><extra></extra>";
+              } else if (dataType === 'signal') {
+                newData.yDataType = 'signal';
+                newData.hovertemplate += "<b>Сигнал</b>: %{y:.1f} %<br><extra></extra>";
+              } else if (dataType === 'batteryVolt') {
+                newData.yDataType = 'batteryVolt';
+                newData.hovertemplate += "<b>Напряжение</b>: %{y:.1f} %<br><extra></extra>";
               }
 
-              tagsWithData.forEach(tag => {
-                const newData = {
-                  name: tag.name,
-                  x: [],
-                  y: [],
-                  type: 'scattergl',
-                  mode: 'lines+markers',
-                  yDataType: null,
-                  hovertemplate: "<b>%{fullData.name}</b>" +
-                      "<br><b>Время</b>: %{x|%d.%m.%Y %H:%m}<br>",
-                };
-                if (dataType === 'temperature') {
-                  newData.yDataType = 'temperature';
-                  newData.hovertemplate += "<b>Температура</b>: %{y:.1f}<br><extra></extra>";
-                } else if (dataType === 'humidity') {
-                  newData.yDataType = 'humidity';
-                  newData.hovertemplate += "<b>Влажность</b>: %{y:.1f} %<br><extra></extra>";
-                }
-
-                response.forEach(d => {
-                  d.date = Date.parse(d.date);
-                });
-
-                response = response.sort((a, b) => a.date - b.date);
-                response.forEach(tempData => {
-                  tempData.date = new Date(tempData.date);
-                  if (tag.uuid === tempData.tag_uuid) {
-
-                    const x = tempData.date;
-                    let y: number;
-                    if (dataType === 'temperature') {
-                      y = tempData.temperature;
-                    } else if (dataType === 'humidity') {
-                      y = tempData.humidity;
-                    }
-                    newData.y.push(y);
-                    newData.x.push(x);
-                  }
-                });
-                this.srcData.push(newData);
+              response.forEach(d => {
+                d.date = Date.parse(d.date);
               });
 
-              if (tagsUUIDWithNoData.length > 0) {
-                this.errorNotifyService.callErrorDialog(`Нет данных у выбранных тегов с uuid:\n [${tagsUUIDWithNoData}]`);
-              }
-              this.plotlyGraph.data.push(...this.srcData);
-              if (action === 'goto') {
-                this.routingService.gotoPlotPage();
-              } else if (action === 'csv') {
-                downloadCSVFile(this.plotlyGraph.data, `${moment().toISOString()}.csv`);
-              }
-              this.loadingService.setLoadingOff();
+              response = response.sort((a, b) => a.date - b.date);
+              response.forEach(tempData => {
+                tempData.date = new Date(tempData.date);
+                if (tag.uuid === tempData.tag_uuid) {
+
+                  const x = tempData.date;
+                  let y: number;
+                  if (dataType === 'temperature') {
+                    y = tempData.temperature;
+                  } else if (dataType === 'humidity') {
+                    y = tempData.humidity;
+                  } else if (dataType === 'signal') {
+                    y = tempData.signal;
+                  } else if (dataType === 'batteryVolt') {
+                    y = tempData.voltage;
+                  }
+                  newData.y.push(y);
+                  newData.x.push(x);
+                }
+              });
+              this.srcData.push(newData);
+            });
+
+            if (tagsUUIDWithNoData.length > 0) {
+              this.errorNotifyService.callErrorDialog(`Нет данных у выбранных тегов с uuid:\n [${tagsUUIDWithNoData}]`);
             }
-          }, error => {
-            this.errorNotifyService.callErrorDialog('Ошибка: ' + error.error.error);
+            this.plotlyGraph.data.push(...this.srcData);
+            if (action === 'goto') {
+              this.routingService.gotoPlotPage();
+            } else if (action === 'csv') {
+              downloadCSVFile(this.plotlyGraph.data, `${moment().toISOString()}.csv`);
+            }
             this.loadingService.setLoadingOff();
-          });
-    } else if (dataType === 'signal') {
-      this.signalDataService.getSignalDataByUUID(uuidList, this.startDate.toISOString(), this.endDate.toISOString(), epsilon)
-          .subscribe((response: Measurement[]) => {
-            this.handleData(response, dataType, uuidList, action);
-            this.loadingService.setLoadingOff();
-          }, error => {
-            this.errorNotifyService.callErrorDialog('Ошибка: ' + error.error.error);
-            this.loadingService.setLoadingOff();
-          });
-    } else if (dataType === 'batteryVolt') {
-      this.voltageDataService.getVoltageDataByUUID(uuidList, this.startDate.toISOString(), this.endDate.toISOString(), epsilon)
-          .subscribe((response: Measurement[]) => {
-            this.handleData(response, dataType, uuidList, action);
-            this.loadingService.setLoadingOff();
-          }, error => {
-            this.errorNotifyService.callErrorDialog('Ошибка: ' + error.error.error);
-            this.loadingService.setLoadingOff();
-          });
+          }
+        }, error => {
+          this.errorNotifyService.callErrorDialog('Ошибка: ' + error.error.error);
+          this.loadingService.setLoadingOff();
+        });
     }
   }
 
@@ -242,7 +236,7 @@ export class PlotService {
       const tagsWithData = [];
       for (const tag of this.tagSelection.selected) {
         if (response.filter((val) => val.tag_uuid === tag.uuid)
-            .length === 0) {
+          .length === 0) {
           tagsUUIDWithNoData.push(tag.uuid);
         } else {
           tagsWithData.push(tag);
@@ -272,7 +266,7 @@ export class PlotService {
           mode: 'lines+markers',
           yDataType: 'signal',
           hovertemplate: "<b>%{fullData.name}</b>" +
-              "<br><b>Время</b>: %{x|%d.%m.%Y %H:%m}<br>",
+            "<br><b>Время</b>: %{x|%d.%m.%Y %H:%m}<br>",
         };
 
         if (dataType === 'signal')
@@ -291,7 +285,7 @@ export class PlotService {
             let y;
             if (dataType === 'signal') {
               y = tempData.signal;
-            } else if (dataType === 'batteryVolt') {
+            } else if (dataType === '') {
               y = tempData.voltage;
             }
             newData.y.push(y);
@@ -356,18 +350,5 @@ export class PlotService {
         approximateTagData(tagData, 0.8);
       }
     }
-  }
-
-  onRelayout($event: any) {
-    // const begin = moment($event["xaxis.range[0]"]);
-    // const end = moment($event["xaxis.range[1]"]);
-    // this.startDate = begin;
-    // this.endDate = end;
-    // const param = {
-    //   tags: this.tags,
-    //   dataType: this.type,
-    //   action: 'nothing'
-    // };
-    // this.setTags(param);
   }
 }

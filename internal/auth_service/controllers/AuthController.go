@@ -9,8 +9,8 @@ import (
 	_ "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
-	"Thermo-WH/pkg/repository"
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/pkg/repository"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 type AuthController struct {

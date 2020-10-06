@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS public.users_roles (
                                                   foreign key (role_id) references roles(id)
 );
 
-create table if not exists public.roles_permissions (
+create table if not exists public.roles_privileges (
                                                         role_id serial,
-                                                        permission_id serial,
-                                                        constraint roles_permissions_pkey primary key (role_id, permission_id),
+                                                        privilege_id serial,
+                                                        constraint roles_privileges_pkey primary key (role_id, privilege_id),
                                                         foreign key (role_id) references roles(id) on delete set default on update cascade,
-                                                        foreign key (permission_id) references privileges(id) on delete set default on update cascade
+                                                        foreign key (privilege_id) references privileges(id) on delete set default on update cascade
 )

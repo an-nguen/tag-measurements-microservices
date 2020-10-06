@@ -7,20 +7,42 @@ import {Role} from "../_domains/role";
   providedIn: 'root'
 })
 export class RoleService {
+  currentUserRoles: Role[] = [];
   roles: Role[] = [];
 
   constructor(private httpClient: HttpClient) { }
 
+  getRoleByToken() {
+    return this.httpClient.get(environment.gateway + '/api/roles/token').subscribe((response: Role[]) => {
+      this.currentUserRoles.push(...response);
+    });
+  }
+
   getRoles() {
-    this.httpClient.get(environment.gateway + '/api/roles/token').subscribe((response: Role[]) => {
+    return this.httpClient.get(environment.gateway + '/api/role').subscribe((response: Role[]) => {
       this.roles.push(...response);
     });
   }
 
   isAdmin(): boolean {
-    if (this.roles && this.roles.length > 0)
-      return !!this.roles.filter((obj: Role) => obj.name === "ADMIN")
+    if (this.currentUserRoles && this.currentUserRoles.length > 0)
+      return !!this.currentUserRoles.filter((obj: Role) => obj.name === "ADMIN")
     else
       return false
+  }
+
+  createRole(role: Role) {
+    return this.httpClient.post(environment.gateway + '/api/role/', {...role})
+      .subscribe((response: Role) => {
+        this.roles.push(response);
+      })
+  }
+
+  updateRole(role: Role) {
+    return this.httpClient.put(environment.gateway + `/api/role/${role.id}`, {...role})
+      .subscribe((response: Role) => {
+        const id = this.currentUserRoles.findIndex((value => value.id === response.id))
+        this.roles.splice(id, 1, response)
+      })
   }
 }

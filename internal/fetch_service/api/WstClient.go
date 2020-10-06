@@ -4,7 +4,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"net/http"
 
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/pkg/models"
 )
 
 type WstClient struct {

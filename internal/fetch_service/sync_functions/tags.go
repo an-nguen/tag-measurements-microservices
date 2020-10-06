@@ -1,13 +1,12 @@
 package sync_functions
 
 import (
-	"Thermo-WH/internal/fetch_service/api"
-	"Thermo-WH/internal/fetch_service/fetch_functions"
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/utils"
 	"errors"
 	gormbulk "github.com/t-tiger/gorm-bulk-insert/v2"
-	"sync"
+	"tag-measurements-microservices/internal/fetch_service/api"
+	"tag-measurements-microservices/internal/fetch_service/fetch_functions"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 /*
@@ -17,7 +16,6 @@ import (
  *
  */
 func SyncTags(client api.WstClient) error {
-	var lock sync.Mutex
 	cloudTags := fetch_functions.FetchTags(client)
 	if len(cloudTags) == 0 {
 		return errors.New("no cloudTags")
@@ -58,21 +56,17 @@ func SyncTags(client api.WstClient) error {
 			}
 		}
 
-		lock.Lock()
 		for _, val := range dbMapTags {
 			client.Connection.Delete(&val)
 		}
-		lock.Unlock()
 	}
 
-	lock.Lock()
 	if len(newTags) > 0 {
 		if err := gormbulk.BulkInsert(client.Connection, newTags,
 			2500); err != nil {
 			utils.LogError("SyncTags", err)
 		}
 	}
-	lock.Unlock()
 
 	return nil
 }

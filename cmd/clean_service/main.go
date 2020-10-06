@@ -3,9 +3,9 @@ package main
 import (
 	"time"
 
-	"Thermo-WH/internal/clean_service/structures"
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/internal/clean_service/structures"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/models"
 )
 
 var FILENAME = "/configs/config_clean.json"

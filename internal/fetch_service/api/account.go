@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strings"
 
-	"Thermo-WH/pkg/dto"
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/pkg/dto"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 /* 		Public function: GetSessionId

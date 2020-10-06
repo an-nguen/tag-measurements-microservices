@@ -3,7 +3,7 @@ package utils
 import (
 	"math"
 
-	"Thermo-WH/pkg/models"
+	"tag-measurements-microservices/pkg/models"
 )
 
 type Point struct {

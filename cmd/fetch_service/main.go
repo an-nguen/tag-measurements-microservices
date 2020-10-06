@@ -6,18 +6,18 @@ import (
 	"sync"
 	"time"
 
-	"Thermo-WH/internal/fetch_service/store_functions"
+	"tag-measurements-microservices/internal/fetch_service/store_functions"
 
-	"Thermo-WH/pkg/utils"
+	"tag-measurements-microservices/pkg/utils"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
-	"Thermo-WH/internal/fetch_service/api"
-	"Thermo-WH/internal/fetch_service/structures"
-	utils2 "Thermo-WH/internal/fetch_service/structures"
-	"Thermo-WH/internal/fetch_service/sync_functions"
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/dto"
+	"tag-measurements-microservices/internal/fetch_service/api"
+	"tag-measurements-microservices/internal/fetch_service/structures"
+	utils2 "tag-measurements-microservices/internal/fetch_service/structures"
+	"tag-measurements-microservices/internal/fetch_service/sync_functions"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/dto"
 )
 
 const FILENAME = "/configs/config_fetch.json"
@@ -44,8 +44,8 @@ func main() {
 func mainLoop(app *structures.App) {
 	for {
 		initWstClients(app)
+		utils.LogPrintln("mainLoop", "Begin to fetch measurements")
 		for _, client := range app.WstClients {
-			utils.LogPrintln("mainLoop", "Begin to fetch measurements")
 			wg.Add(1)
 			go clientFetch(app, client)
 		}
@@ -124,10 +124,8 @@ func clientFetch(app *structures.App, wstClient api.WstClient) {
 	/** Fetch tags with all information and compare with existed **/
 	_ = sync_functions.SyncTags(wstClient)
 
-	//go store_functions.StoreTagData(wstClient, app)
-	store_functions.StoreMeasurement(wstClient, app, "temperature")
-	store_functions.StoreMeasurement(wstClient, app, "cap")
-	store_functions.StoreMeasurement(wstClient, app, "signal")
-	store_functions.StoreMeasurement(wstClient, app, "batteryVolt")
-
+	store_functions.StoreMeasurement(wstClient, app, store_functions.Temperature)
+	store_functions.StoreMeasurement(wstClient, app, store_functions.Humidity)
+	store_functions.StoreMeasurement(wstClient, app, store_functions.BatteryVoltage)
+	store_functions.StoreMeasurement(wstClient, app, store_functions.Signal)
 }

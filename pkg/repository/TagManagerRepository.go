@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"Thermo-WH/pkg/models"
 	"github.com/jinzhu/gorm"
+	"tag-measurements-microservices/pkg/models"
 )
 
 type TagManagerRepository struct {

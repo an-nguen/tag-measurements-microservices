@@ -1,13 +1,11 @@
 package sync_functions
 
 import (
-	"Thermo-WH/internal/fetch_service/api"
-	"Thermo-WH/internal/fetch_service/fetch_functions"
-	"Thermo-WH/pkg/models"
-	"Thermo-WH/pkg/utils"
 	"errors"
-	gormbulk "github.com/t-tiger/gorm-bulk-insert/v2"
-	"sync"
+	"tag-measurements-microservices/internal/fetch_service/api"
+	"tag-measurements-microservices/internal/fetch_service/fetch_functions"
+	"tag-measurements-microservices/pkg/models"
+	"tag-measurements-microservices/pkg/utils"
 )
 
 /*
@@ -18,14 +16,13 @@ import (
  *		returns synchronized tag managers
  */
 func SyncManagers(client api.WstClient) error {
-	var lock sync.Mutex
 	cloudManagers := fetch_functions.FetchManagers(client)
 	if len(cloudManagers) == 0 {
 		return errors.New("tag managers is empty")
 	}
 	var databaseTagManagers []models.TagManager
 	client.Connection.Where("email = ?", client.Email).Find(&databaseTagManagers)
-	var newTagManagers []interface{}
+	var newTagManagers []models.TagManager
 
 	if len(cloudManagers) > 0 && len(databaseTagManagers) == 0 {
 		for _, mgr := range cloudManagers {
@@ -42,11 +39,9 @@ func SyncManagers(client api.WstClient) error {
 			if val, ok := databaseMapTagManagers[cloudManager.Mac]; ok {
 				val.Name = cloudManager.Name
 				val.Email = cloudManager.Email
-				lock.Lock()
 				if err := client.Connection.Save(&val).Error; err != nil {
 					utils.LogError("SyncManagers", err)
 				}
-				lock.Unlock()
 				for key := range databaseMapTagManagers {
 					if key == cloudManager.Mac {
 						delete(databaseMapTagManagers, key)
@@ -58,13 +53,15 @@ func SyncManagers(client api.WstClient) error {
 		}
 	}
 
-	lock.Lock()
+	sqlInsertStmt := "insert into tag_manager (mac, name, email) values ($1, $2, $3)"
 	if len(newTagManagers) > 0 {
-		if err := gormbulk.BulkInsert(client.Connection, newTagManagers, 2500); err != nil {
-			utils.LogError("SyncFunctions", err)
+		for _, mgr := range newTagManagers {
+			_, err := client.Connection.DB().Exec(sqlInsertStmt, mgr.Mac, mgr.Name, mgr.Email)
+			if err != nil {
+				utils.LogError("storeMeasurement:handleResponse", err)
+			}
 		}
 	}
-	lock.Unlock()
 
 	return nil
 }

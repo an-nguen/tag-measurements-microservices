@@ -6,10 +6,10 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
-	"Thermo-WH/internal/auth_service/controllers"
-	"Thermo-WH/internal/auth_service/structures"
-	"Thermo-WH/pkg/datasource"
-	"Thermo-WH/pkg/repository"
+	"tag-measurements-microservices/internal/auth_service/controllers"
+	"tag-measurements-microservices/internal/auth_service/structures"
+	"tag-measurements-microservices/pkg/datasource"
+	"tag-measurements-microservices/pkg/repository"
 )
 
 var appConfig = structures.ReadAppConfig("/configs/config_auth.json")
