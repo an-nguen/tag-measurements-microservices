@@ -3,9 +3,11 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {UserService} from "../_services/user.service";
 import {User} from "../_domains/user";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {RoleService} from "../_services/role.service";
+import {Role} from "../_domains/role";
 
 interface UserDialogData {
-  username: string,
+  user?: User,
   mode: 'create' | 'edit' | undefined;
 }
 
@@ -17,13 +19,19 @@ interface UserDialogData {
 export class EditUserDialogComponent implements OnInit {
   usernameValue: string = '';
   passwordValue: string = '';
+  selectedRoles: Role[] = [];
 
   constructor(public dialogRef: MatDialogRef<EditUserDialogComponent>,
               public userService: UserService,
+              public roleService: RoleService,
               private snackBar: MatSnackBar,
               @Inject(MAT_DIALOG_DATA) public data: UserDialogData) { }
 
   ngOnInit(): void {
+    if (this.data.user && this.data.user.username)
+      this.usernameValue = this.data.user.username;
+    if (this.data.user && this.data.user.roles)
+      this.selectedRoles = this.data.user.roles;
   }
 
   editUser() {
@@ -31,19 +39,21 @@ export class EditUserDialogComponent implements OnInit {
       return
     }
     const user = {
-      id: -1,
+      id: this.data.user.id,
       username: this.usernameValue,
-      password: this.passwordValue
+      password: this.passwordValue,
+      roles: this.selectedRoles
     }
     this.userService.updateUser(user).subscribe((resp: User) => {
-      this.userService.users.push(resp);
       this.snackBar.open(`Пользователь ${resp.username} изменён.`, 'Закрыть', {
         duration: 5000
       });
+      this.dialogRef.close({user: resp});
     }, error => {
       this.snackBar.open(`Пользователь не изменён. Ошибка: ${error.error}.`, 'Закрыть', {
         duration: 5000
       });
+      this.dialogRef.close();
     })
   }
 
@@ -52,19 +62,20 @@ export class EditUserDialogComponent implements OnInit {
       return
     }
     const user = {
-      id: -1,
       username: this.usernameValue,
-      password: this.passwordValue
+      password: this.passwordValue,
+      roles: this.selectedRoles
     }
     this.userService.createUser(user).subscribe((resp: User) => {
-      this.userService.users.push(resp);
       this.snackBar.open(`Пользователь ${resp.username} добавлен.`, 'Закрыть', {
         duration: 5000
       });
+      this.dialogRef.close(resp);
     }, error => {
       this.snackBar.open(`Пользователь не создан. Ошибка: ${error.error}.`, 'Закрыть', {
         duration: 5000
       });
+      this.dialogRef.close();
     })
   }
 }

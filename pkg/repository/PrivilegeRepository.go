@@ -13,7 +13,7 @@ type PrivilegeRepository struct {
 func (r PrivilegeRepository) GetPrivileges() ([]models.Privilege, error) {
 	var privileges []models.Privilege
 
-	if err := r.DataSource.Find(&privileges).Error; err != nil {
+	if err := r.DataSource.Preload("Roles").Find(&privileges).Error; err != nil {
 		return []models.Privilege{}, err
 	}
 	return privileges, nil
@@ -38,7 +38,6 @@ func (r PrivilegeRepository) UpdatePrivilege(privilege models.Privilege) (models
 	}
 
 	databasePrivilege.Name = privilege.Name
-	databasePrivilege.Value = privilege.Value
 	databasePrivilege.Roles = privilege.Roles
 	r.DataSource.Save(&databasePrivilege)
 	r.DataSource.Model(&databasePrivilege).Association("Roles").Replace(privilege.Roles)

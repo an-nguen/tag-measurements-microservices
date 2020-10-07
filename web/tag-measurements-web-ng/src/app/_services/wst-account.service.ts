@@ -19,10 +19,10 @@ export class WstAccountService {
   }
 
   updateWstAccount(wstAccount: WirelessTagAccount) {
-    return this.httpClient.put(environment.gateway + `/api/wstAccounts/${wstAccount.id}`, {...wstAccount});
+    return this.httpClient.put(environment.gateway + `/api/wstAccounts/${wstAccount.email}`, {...wstAccount});
   }
 
   deleteWstAccount(wstAccount: WirelessTagAccount) {
-    return this.httpClient.delete(environment.gateway + `/api/wstAccounts/${wstAccount.id}`);
+    return this.httpClient.delete(environment.gateway + `/api/wstAccounts/${wstAccount.email}`);
   }
 }

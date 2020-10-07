@@ -10,6 +10,10 @@ import {MatDialog} from "@angular/material/dialog";
 import {EditUserDialogComponent} from "../edit-user-dialog/edit-user-dialog.component";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {Role} from "../_domains/role";
+import {Privilege} from "../_domains/privilege";
+import {EditRoleDialogComponent} from "../edit-role-dialog/edit-role-dialog.component";
+import {PrivilegeService} from "../_services/privilege.service";
+import {EditPrivilegeDialogComponent} from "../edit-privilege-dialog/edit-privilege-dialog.component";
 
 @Component({
   selector: 'app-admin-settings',
@@ -18,11 +22,15 @@ import {Role} from "../_domains/role";
 })
 export class AdminSettingsComponent implements OnInit {
   @ViewChild(MatSort, {static: false}) sort: MatSort;
-  userDataSource: MatTableDataSource<User>
-  roleDataSource: MatTableDataSource<Role>
-  public displayedColumns = ['username', 'actions'];
+  userDataSource: MatTableDataSource<User>;
+  roleDataSource: MatTableDataSource<Role>;
+  privilegeDataSource: MatTableDataSource<Privilege>
+  public userDisplayedColumns = ['username', 'actions'];
+  public roleDisplayedColumns = ['name', 'actions'];
+  public privilegeDisplayedColumns = ['name', 'value'];
   constructor(private userService: UserService,
               private roleService: RoleService,
+              private privilegeService: PrivilegeService,
               private router: Router,
               private snackBar: MatSnackBar,
               private dialog: MatDialog) { }
@@ -31,22 +39,34 @@ export class AdminSettingsComponent implements OnInit {
     if (!this.roleService.isAdmin()) {
       this.router.navigate(['']);
     }
+    this.updateData();
+  }
 
+
+  private updateData() {
     this.userService.getUsers().add(() => {
       this.userDataSource = new MatTableDataSource<User>(this.userService.users);
       this.userDataSource.sort = this.sort;
     });
-    this.roleService.getRoleByToken()
+    this.roleService.getRoles().add(() => {
+      this.roleDataSource = new MatTableDataSource<Role>(this.roleService.roles);
+      this.roleDataSource.sort = this.sort;
+    })
+    this.privilegeService.getPrivileges().add(() => {
+      this.privilegeDataSource = new MatTableDataSource<Privilege>(this.privilegeService.privileges);
+      this.privilegeDataSource.sort = this.sort;
+    })
   }
-
 
   createUser() {
     this.dialog.open(EditUserDialogComponent, {
       width: '640px',
       data: {
-        username: '',
+        user: {},
         mode: 'create'
       }
+    }).afterClosed().subscribe((result) => {
+      console.log(result)
     })
   }
 
@@ -54,17 +74,117 @@ export class AdminSettingsComponent implements OnInit {
     this.dialog.open(EditUserDialogComponent, {
       width: '640px',
       data: {
-        username: user.username,
+        user: user,
         mode: 'edit'
       }
+    }).afterClosed().subscribe((result) => {
+      console.log(result)
     })
   }
 
   deleteUser(user: User) {
     this.userService.deleteUser(user).subscribe((resp: any) => {
+      const id = this.userDataSource.data.findIndex((value => value.id === user.id));
+      this.userDataSource.data.splice(id, 1);
       this.snackBar.open(`Пользователь ${user.username} удалён.`, 'Закрыть', {
         duration: 5000
       });
+    }, error => {
+      this.snackBar.open(`Пользователь не удалён. Ошибка: ${error.error}`, 'Закрыть', {
+        duration: 5000
+      });
     });
+  }
+
+  createRole() {
+    this.dialog.open(EditRoleDialogComponent, {
+      width: '640px',
+      data: {
+        role: {},
+        mode: 'create'
+      }
+    }).afterClosed().subscribe((result: Role) => {
+      if (!result) return;
+
+      this.roleDataSource.data.push(result);
+    })
+  }
+
+  editRole(role: Role) {
+    this.dialog.open(EditRoleDialogComponent, {
+      width: '640px',
+      data: {
+        role: role,
+        mode: 'edit'
+      }
+    }).afterClosed().subscribe((result: Role) => {
+      if (!result) return;
+
+      const id = this.roleDataSource.data.findIndex(role => role.id === result.id);
+      if (id) {
+        this.roleDataSource.data.splice(id, 1, result)
+      }
+    })
+  }
+
+  deleteRole(role: Role) {
+    this.roleService.deleteRole(role)
+      .subscribe((resp) => {
+          const id = this.roleDataSource.data.findIndex((value => value.id === role.id));
+          if (id)
+            this.roleDataSource.data.splice(id, 1);
+          this.snackBar.open(`Роль ${role.name} удалена.`, 'Закрыть', {
+            duration: 5000
+          });
+        }, error => {
+          this.snackBar.open(`Роль не удалена. Ошибка: ${error.error}`, 'Закрыть', {
+            duration: 5000
+          });
+        }
+      );
+  }
+
+  createPrivilege() {
+    this.dialog.open(EditPrivilegeDialogComponent, {
+      width: '640px',
+      data: {
+        privilege: {},
+        mode: 'create'
+      }
+    }).afterClosed().subscribe((result: Privilege) => {
+      if (!result) return;
+
+      this.privilegeDataSource.data.push(result);
+    })
+  }
+
+  editPrivilege(privilege: Privilege) {
+    this.dialog.open(EditPrivilegeDialogComponent, {
+      width: '640px',
+      data: {
+        privilege: privilege,
+        mode: 'edit'
+      }
+    }).afterClosed().subscribe((result: Privilege) => {
+      if (!result) return;
+
+      const id = this.privilegeDataSource.data.findIndex(privilege => privilege.id === result.id);
+      if (id) {
+        this.privilegeDataSource.data.splice(id, 1, result)
+      }
+    })
+  }
+
+  deletePrivilege(removedPrivilege: Privilege) {
+    this.privilegeService.deletePrivilege(removedPrivilege)
+      .subscribe((resp) => {
+        this.snackBar.open(`Привилегия ${removedPrivilege.name} удалена.`, 'Закрыть', {
+          duration: 5000
+        });
+        const id = this.privilegeDataSource.data.findIndex(privilege => privilege.id === removedPrivilege.id);
+        if (id) {
+          this.privilegeDataSource.data.splice(id, 1)
+        }
+      })
   }
 }

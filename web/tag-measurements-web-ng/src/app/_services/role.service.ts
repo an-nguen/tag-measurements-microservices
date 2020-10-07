@@ -20,7 +20,7 @@ export class RoleService {
 
   getRoles() {
     return this.httpClient.get(environment.gateway + '/api/role').subscribe((response: Role[]) => {
-      this.roles.push(...response);
+      this.roles = response;
     });
   }
 
@@ -32,17 +32,14 @@ export class RoleService {
   }
 
   createRole(role: Role) {
-    return this.httpClient.post(environment.gateway + '/api/role/', {...role})
-      .subscribe((response: Role) => {
-        this.roles.push(response);
-      })
+    return this.httpClient.post(environment.gateway + '/api/role/', {...role});
   }
 
   updateRole(role: Role) {
-    return this.httpClient.put(environment.gateway + `/api/role/${role.id}`, {...role})
-      .subscribe((response: Role) => {
-        const id = this.currentUserRoles.findIndex((value => value.id === response.id))
-        this.roles.splice(id, 1, response)
-      })
+    return this.httpClient.put(environment.gateway + `/api/role/${role.id}`, {...role});
+  }
+
+  deleteRole(role: Role) {
+    return this.httpClient.delete(environment.gateway + `/api/role/${role.id}`);
   }
 }

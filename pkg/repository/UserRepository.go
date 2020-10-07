@@ -116,8 +116,16 @@ func (repo UserRepository) DeleteUser(id int) error {
 
 func (repo UserRepository) GetUsers() ([]models.User, error) {
 	var users []models.User
-	if err := repo.DataSource.Select("username").Find(&users).Error; err != nil {
+	if err := repo.DataSource.Select([]string{"id", "username"}).Preload("Roles").Preload("Roles.Privileges").Find(&users).Error; err != nil {
 		return []models.User{}, err
 	}
 	return users, nil
+}
+
+func (repo UserRepository) GetUser(id int) (models.User, error) {
+	var user models.User
+	if err := repo.DataSource.Where("id = ?", id).Select([]string{"id", "username"}).Preload("Roles").Preload("Roles.Privileges").First(&user).Error; err != nil {
+		return models.User{}, err
+	}
+	return user, nil
 }

@@ -16,6 +16,9 @@ create table public.privileges (
                                     name varchar(256) unique not null
 );
 
+insert into public.roles (name, description) values ('ADMIN', '');
+insert into public.privileges (name) values ('PERMIT_COLUMN_TABLE_UUID');
+
 
 ALTER TABLE public.users OWNER TO an;
 ALTER TABLE public.roles OWNER TO an;

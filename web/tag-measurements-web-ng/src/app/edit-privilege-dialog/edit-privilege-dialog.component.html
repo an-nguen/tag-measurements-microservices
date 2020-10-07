@@ -1,0 +1,19 @@
+<h1 mat-dialog-title>
+  <ng-container *ngIf="data.mode === 'edit'">
+    Редактирование привилегии
+  </ng-container>
+  <ng-container *ngIf="data.mode === 'create'">
+    Создание новой привилегии
+  </ng-container>
+</h1>
+<div mat-dialog-content>
+  <mat-form-field class="full-width" appearance="outline">
+    <mat-label>Имя привилегии</mat-label>
+    <input matInput type="text" [(ngModel)]="nameValue" name="usernameValue">
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-flat-button type="button" color="primary" *ngIf="data.mode === 'edit'" (click)="editPrivilege()"><mat-icon prefix>edit</mat-icon>Изменить</button>
+  <button mat-flat-button type="button" color="primary" *ngIf="data.mode === 'create'" (click)="createPrivilege()"><mat-icon prefix>add</mat-icon>Создать</button>
+  <button mat-flat-button type="button" color="warn" (click)="dialogRef.close()">Закрыть</button>
+</div>

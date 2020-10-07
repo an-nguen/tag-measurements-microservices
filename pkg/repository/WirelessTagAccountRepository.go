@@ -31,7 +31,7 @@ func (repo WstAccountRepository) CreateWirelessTagAccount(account models.Wireles
 
 func (repo WstAccountRepository) UpdateWirelessTagAccount(id string, acc models.WirelessTagAccount) (models.WirelessTagAccount, error) {
 	var accountDb models.WirelessTagAccount
-	if err := repo.DataSource.Where("id = ?", id).First(&accountDb).Error; err != nil {
+	if err := repo.DataSource.Where("email = ?", id).First(&accountDb).Error; err != nil {
 		return models.WirelessTagAccount{}, err
 	}
 	accountDb.Email = acc.Email
@@ -43,7 +43,7 @@ func (repo WstAccountRepository) UpdateWirelessTagAccount(id string, acc models.
 
 func (repo WstAccountRepository) DeleteWirelessTagAccount(id string) {
 	var accountDb models.WirelessTagAccount
-	if err := repo.DataSource.Where("id = ?", id).First(&accountDb).Error; err != nil {
+	if err := repo.DataSource.Where("email = ?", id).First(&accountDb).Error; err != nil {
 		return
 	}
 	repo.DataSource.Delete(&accountDb)

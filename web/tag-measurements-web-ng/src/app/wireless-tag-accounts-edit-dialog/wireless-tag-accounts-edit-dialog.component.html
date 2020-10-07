@@ -1,16 +1,22 @@
-<h1 mat-dialog-title>Изменение WST-аккаунта</h1>
+<h1 mat-dialog-title>
+<ng-container *ngIf="data.mode === 'edit'">Изменение WST-аккаунта</ng-container>
+<ng-container *ngIf="data.mode === 'create'">Создание WST-аккаунта</ng-container>
+
+</h1>
 <div mat-dialog-content>
   <form #fe="ngForm">
-    <mat-form-field appearance="outline">
+    <mat-form-field class="full-width" appearance="outline">
       <mat-label>Почта</mat-label>
       <input matInput  type="text" ngModel  name="editEmail" required />
     </mat-form-field>
-    <mat-form-field appearance="outline">
+    <mat-form-field class="full-width" appearance="outline">
       <mat-label>Почта</mat-label>
       <input matInput  type="text" ngModel  name="editPassword" required />
     </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions>
-
+  <button mat-flat-button color="primary" *ngIf="data.mode === 'create'" (click)="addWirelessTagAccount()"><mat-icon>add</mat-icon>Добавить</button>
+  <button mat-flat-button color="primary" *ngIf="data.mode === 'edit'" (click)="editWirelessTagAccount()"><mat-icon>edit</mat-icon>Изменить</button>
+  <button mat-flat-button color="warn" (click)="dialogRef.close()">Закрыть</button>
 </div>

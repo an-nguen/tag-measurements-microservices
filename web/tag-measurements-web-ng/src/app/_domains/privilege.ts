@@ -1,8 +1,8 @@
 import {Role} from "./role";
 
-export interface User {
+export interface Privilege {
   id?: number;
-  username: string;
-  password: string;
+  name: string;
+  value: string;
   roles?: Role[];
 }

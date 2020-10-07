@@ -11,7 +11,8 @@ type RoleRepository struct {
 
 func (repo RoleRepository) GetRoles() ([]models.Role, error) {
 	var roles []models.Role
-	if err := repo.DataSource.Find(&roles).Error; err != nil {
+	if err := repo.DataSource.Preload("Users").
+		Preload("Privileges").Find(&roles).Error; err != nil {
 		return nil, err
 	}
 	return roles, nil

@@ -54,6 +54,8 @@ import {MatGridListModule} from "@angular/material/grid-list";
 import {WirelessTagAccountsEditDialogComponent} from './wireless-tag-accounts-edit-dialog/wireless-tag-accounts-edit-dialog.component';
 import {AdminSettingsComponent} from './admin-settings/admin-settings.component';
 import { EditUserDialogComponent } from './edit-user-dialog/edit-user-dialog.component';
+import { EditRoleDialogComponent } from './edit-role-dialog/edit-role-dialog.component';
+import { EditPrivilegeDialogComponent } from './edit-privilege-dialog/edit-privilege-dialog.component';
 
 PlotlyModule.plotlyjs = PlotlyJS;
 PlotlyJS.register(locale);
@@ -76,6 +78,8 @@ PlotlyJS.setPlotConfig({locale: 'ru'});
     WirelessTagAccountsEditDialogComponent,
     AdminSettingsComponent,
     EditUserDialogComponent,
+    EditRoleDialogComponent,
+    EditPrivilegeDialogComponent,
   ],
   imports: [
     BrowserModule,

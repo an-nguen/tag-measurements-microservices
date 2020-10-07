@@ -45,6 +45,10 @@ var roleController = controllers.RoleController{
 	Repository: repository.RoleRepository{DataSource: userDb},
 }
 
+var privilegeController = controllers.PrivilegeController{
+	Repository: repository.PrivilegeRepository{DataSource: userDb},
+}
+
 func main() {
 	if tz := os.Getenv("TZ"); tz != "" {
 		var err error
@@ -114,6 +118,7 @@ func main() {
 	userAPI.Use(authMiddleware.NewWithRole("ADMIN"))
 	{
 		userAPI.GET("", userController.GetUsers)
+		userAPI.GET("/:id", userController.GetUser)
 		userAPI.POST("", userController.CreateUser)
 		userAPI.PUT("/:id", userController.UpdateUser)
 		userAPI.DELETE("/:id", userController.DeleteUser)
@@ -129,6 +134,13 @@ func main() {
 		roleAPI.POST("", roleController.CreateRole)
 		roleAPI.PUT("/:id", roleController.UpdateRole)
 		roleAPI.DELETE("/:id", roleController.DeleteRole)
+	}
+	privilegeAPI := api.Group("/privilege")
+	privilegeAPI.Use(authMiddleware.NewWithRole("ADMIN"))
+	{
+		privilegeAPI.GET("", privilegeController.GetPrivileges)
+		privilegeAPI.POST("", privilegeController.CreatePrivilege)
+		privilegeAPI.PUT("/:id", privilegeController.UpdatePrivilege)
 	}
 
 	err := router.Run(fmt.Sprintf(":%s", appConfig.ServerPort))

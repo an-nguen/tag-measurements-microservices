@@ -14,6 +14,16 @@ type UserController struct {
 	Repository repository.UserRepository
 }
 
+func (c UserController) GetUsers(ctx *gin.Context) {
+	users, err := c.Repository.GetUsers()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, users)
+}
+
 func (c UserController) CreateUser(ctx *gin.Context) {
 	var jsonReq models.User
 	if err := ctx.ShouldBindJSON(&jsonReq); err != nil {
@@ -66,12 +76,19 @@ func (c UserController) DeleteUser(ctx *gin.Context) {
 	err = c.Repository.DeleteUser(id)
 }
 
-func (c UserController) GetUsers(ctx *gin.Context) {
-	users, err := c.Repository.GetUsers()
+func (c UserController) GetUser(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user, err := c.Repository.GetUser(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, users)
+	ctx.JSON(http.StatusOK, user)
 }
