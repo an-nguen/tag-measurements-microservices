@@ -40,7 +40,7 @@ CREATE TABLE public.measurement (
 );
 
 
-CREATE INDEX measurement_timestamp_tag_uuid_index ON public.measurement (id, date, tag_uuid);
+CREATE INDEX measurement_timestamp_tag_uuid_index ON public.measurement (date DESC, tag_uuid);
 
 CREATE TABLE public.temperature_zone_tag (
                                             temperature_zone_id SERIAL not null,

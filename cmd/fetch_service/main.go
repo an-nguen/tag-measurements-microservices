@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"tag-measurements-microservices/pkg/models"
 	"time"
 
 	"tag-measurements-microservices/internal/fetch_service/store_functions"
@@ -22,8 +23,7 @@ import (
 
 const FILENAME = "/configs/config_fetch.json"
 const MeasurementTableName = "measurement"
-
-var wg sync.WaitGroup
+const ArraySize = 131072
 
 func main() {
 	utils.LogPrintln("FETCH SERVICE", "Launched.")
@@ -42,21 +42,23 @@ func main() {
 }
 
 func mainLoop(app *structures.App) {
+	var wg sync.WaitGroup
+
 	for {
+		app.InsertMeasurements = make([]models.Measurement, 0, ArraySize)
+		app.UpdateMeasurements = make([]models.Measurement, 0, ArraySize)
 		initWstClients(app)
 		utils.LogPrintln("mainLoop", "Begin to fetch measurements")
 		for _, client := range app.WstClients {
 			wg.Add(1)
-			go clientFetch(app, client)
+			go clientFetch(app, client, &wg)
 		}
+		utils.LogPrintln("mainLoop", "Wait for goroutines")
 		wg.Wait()
+		app.StoreMeasurementDatabase()
+		app.ClearInsertMeasurements()
+		app.ClearUpdateMeasurements()
 		utils.LogPrintln("mainLoop", "End of fetching measurements. Wait for next iteration")
-		for _, client := range app.WstClients {
-			err := client.Connection.Close()
-			if err != nil {
-				utils.LogError("clientFetch", err)
-			}
-		}
 
 		time.Sleep(15 * time.Second)
 	}
@@ -108,24 +110,22 @@ func initWstClients(app *structures.App) {
 				return
 			}
 
-			wstClient.Connection = datasource.InitDatabaseConnection(app.Config.Host, app.Config.Port,
-				app.Config.User, app.Config.Password, app.Config.DbName)
 			app.WstClients = append(app.WstClients, wstClient)
 		}
 	}
 	utils.LogPrintln("initWstClients", "Successful.")
 }
 
-func clientFetch(app *structures.App, wstClient api.WstClient) {
-	defer wg.Done()
+func clientFetch(app *structures.App, wstClient api.WstClient, wg *sync.WaitGroup) {
 	/** Fetch managers and compare existed **/
-	_ = sync_functions.SyncManagers(wstClient)
+	_ = sync_functions.SyncManagers(wstClient, app)
 
 	/** Fetch tags with all information and compare with existed **/
-	_ = sync_functions.SyncTags(wstClient)
+	_ = sync_functions.SyncTags(wstClient, app)
 
 	store_functions.StoreMeasurement(wstClient, app, store_functions.Temperature)
 	store_functions.StoreMeasurement(wstClient, app, store_functions.Humidity)
 	store_functions.StoreMeasurement(wstClient, app, store_functions.BatteryVoltage)
 	store_functions.StoreMeasurement(wstClient, app, store_functions.Signal)
+	wg.Done()
 }

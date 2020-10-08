@@ -29,17 +29,24 @@ func TestCreateCSV(t *testing.T) {
 	var measurements map[string][]Measurement
 	measurements = make(map[string][]Measurement)
 	var date time.Time
-	date = time.Now().Add(-7 * (time.Hour * 24))
-	tagUUIDs := []string{"f031dca9-3014-43f7-b68c-5ed1043e5420", "eb2c6d4e-06b5-431c-8aa5-bdca136e5918", "62a990d5-2841-47e8-b9d5-8a5c1d9d92c7",
-		"aafa6666-84fb-4d84-bd1a-eea1d2c9164f", "850aec8f-5af4-46b0-955c-83fefb5cc962", "89ca038e-b568-4d2c-ac8d-b2ea0b42e333", "27263c4c-e4ce-421c-a152-33eb0d424526",
-		"2ca28760-a1ba-43e4-b060-c76b0552efe2", "78e421cd-6812-4b50-ab2e-fa1229ba1009", "e96d4dda-fc09-43ec-bd0f-6d8781be5f7c", "fb3c2037-f39d-45f2-8d24-1b5e576addcf"}
-	db = datasource.InitDatabaseConnection("", "", "", "", "")
+	date = time.Now().Add(-14 * (time.Hour * 24))
+	tagUUIDs := []string{"92bb22cf-7273-4b98-833f-dc90782dee42", "61ac408f-6e5c-4373-b8fd-919563f62352",
+		"0b91bf39-d8c3-44c4-83c1-5162dc156483",
+		"f8a5de85-a6f5-4c38-87ec-af8d113a1b6e",
+		"d1fd7a4f-26ce-4026-aef0-3f2aa65b284b",
+		"a0da30ae-0db6-404a-8dff-476176eec409",
+		"6e1e132e-135b-4a79-b7e9-45ab4c2a7641",
+		"ee0690f8-420f-4662-b85d-2c064c72c996",
+		"92bb22cf-7273-4b98-833f-dc90782dee42",
+		"62ed2142-3bf1-4f1f-a517-d27b11e22cb2",
+	}
+	db = datasource.InitDatabaseConnection("", "5432", "an", "", "tag_measurements")
 
 	for _, uuid := range tagUUIDs {
 		var tag Tag
 		db.Table("tag").Where("uuid = ?", uuid).First(&tag)
 		var measurementsTemp []Measurement
-		db.Table("tag_data").Where("tag_uuid = ? and date BETWEEN ? AND ?", uuid, date, time.Now()).Find(&measurementsTemp)
+		db.Table("measurement").Where("tag_uuid = ? and date BETWEEN ? AND ?", uuid, date, time.Now()).Find(&measurementsTemp)
 		measurements[tag.Name] = measurementsTemp
 	}
 	f, err := os.Create("test.csv")
@@ -51,7 +58,7 @@ func TestCreateCSV(t *testing.T) {
 	_, _ = f.WriteString("Имя тега;Дата;Температура;Влажность;\n")
 	for k, v := range measurements {
 		for _, data := range v {
-			_, _ = f.WriteString(fmt.Sprintf("%s;%s;%f;%f;\n", k, data.Date.Format("01.02.2006 15:04:05-0700"), data.Temperature, data.Humidity))
+			_, _ = f.WriteString(fmt.Sprintf("%s;%s;%f;%f;\n", k, data.Date.Format("02.01.2006 15:04:05-0700"), data.Temperature, data.Humidity))
 		}
 	}
 }

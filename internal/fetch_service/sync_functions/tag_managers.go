@@ -4,6 +4,7 @@ import (
 	"errors"
 	"tag-measurements-microservices/internal/fetch_service/api"
 	"tag-measurements-microservices/internal/fetch_service/fetch_functions"
+	"tag-measurements-microservices/internal/fetch_service/structures"
 	"tag-measurements-microservices/pkg/models"
 	"tag-measurements-microservices/pkg/utils"
 )
@@ -15,13 +16,13 @@ import (
  *
  *		returns synchronized tag managers
  */
-func SyncManagers(client api.WstClient) error {
+func SyncManagers(client api.WstClient, app *structures.App) error {
 	cloudManagers := fetch_functions.FetchManagers(client)
 	if len(cloudManagers) == 0 {
 		return errors.New("tag managers is empty")
 	}
 	var databaseTagManagers []models.TagManager
-	client.Connection.Where("email = ?", client.Email).Find(&databaseTagManagers)
+	app.DataDb.Where("email = ?", client.Email).Find(&databaseTagManagers)
 	var newTagManagers []models.TagManager
 
 	if len(cloudManagers) > 0 && len(databaseTagManagers) == 0 {
@@ -39,7 +40,7 @@ func SyncManagers(client api.WstClient) error {
 			if val, ok := databaseMapTagManagers[cloudManager.Mac]; ok {
 				val.Name = cloudManager.Name
 				val.Email = cloudManager.Email
-				if err := client.Connection.Save(&val).Error; err != nil {
+				if err := app.DataDb.Save(&val).Error; err != nil {
 					utils.LogError("SyncManagers", err)
 				}
 				for key := range databaseMapTagManagers {
@@ -56,7 +57,7 @@ func SyncManagers(client api.WstClient) error {
 	sqlInsertStmt := "insert into tag_manager (mac, name, email) values ($1, $2, $3)"
 	if len(newTagManagers) > 0 {
 		for _, mgr := range newTagManagers {
-			_, err := client.Connection.DB().Exec(sqlInsertStmt, mgr.Mac, mgr.Name, mgr.Email)
+			_, err := app.DataDb.DB().Exec(sqlInsertStmt, mgr.Mac, mgr.Name, mgr.Email)
 			if err != nil {
 				utils.LogError("storeMeasurement:handleResponse", err)
 			}
