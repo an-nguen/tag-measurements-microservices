@@ -19,6 +19,7 @@ import {RoutingService} from '../_services/routing.service';
   styleUrls: ['./plot-page.component.css']
 })
 export class PlotPageComponent implements OnInit {
+  csvButtonLoading = false;
 
   constructor(public plotService: PlotService,
               public routingService: RoutingService,
@@ -34,9 +35,12 @@ export class PlotPageComponent implements OnInit {
     const param = {
       tags: this.plotService.tags,
       dataType: this.plotService.type,
-      action: 'csv'
     };
-    this.plotService.build(param);
+    this.csvButtonLoading = true;
+    const response = this.plotService.loadCSV(param);
+    response.add(() => {
+      this.csvButtonLoading = false;
+    })
   }
 
   rebuild() {

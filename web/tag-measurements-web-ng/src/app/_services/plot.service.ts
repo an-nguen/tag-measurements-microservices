@@ -5,10 +5,9 @@ import {ErrorNotifyService} from './error-notify.service';
 import {RoutingService} from './routing.service';
 import * as moment from 'moment';
 import {LoadingService} from './loading.service';
-import {downloadCSVFile, vh} from '../_utils/conv';
+import {vh} from '../_utils/conv';
 import {SelectionModel} from '@angular/cdk/collections';
 import {Measurement} from "../_domains/measurement";
-import {approximateTagData} from "../_helpers/DouglasPeucker";
 
 
 @Injectable({
@@ -108,9 +107,7 @@ export class PlotService {
     const diff = this.endDate.diff(this.startDate, "hours");
     let epsilon = 0.0;
     if ((!this.withoutApproximation) === true) {
-      if (action === 'csv') {
-        epsilon = 0;
-      } else if (diff < 24) {
+      if (diff < 24) {
         epsilon = 0.01;
       } else if (diff >= 24 && diff < 48) {
         epsilon = 0.05;
@@ -131,7 +128,7 @@ export class PlotService {
           this.checkResponse(response, uuidList);
           if (response.length > 0) {
             const tagsUUIDWithNoData = [];
-            const tagsWithData = [];
+            let tagsWithData = [];
             // Handle tags - remove tags with no data
             for (const tag of this.tagSelection.selected) {
               if (response.filter((val) => val.tag_uuid === tag.uuid)
@@ -188,6 +185,19 @@ export class PlotService {
               });
 
               response = response.sort((a, b) => a.date - b.date);
+              response = response.filter(val => {
+                if (dataType === 'temperature') {
+                  return val.temperature !== 0;
+                } else if (dataType === 'humidity') {
+                  return val.humidity !== 0;
+                } else if (dataType === 'signal') {
+                  return val.signal !== 0;
+                } else if (dataType === 'batteryVolt') {
+                  return val.voltage !== 0;
+                } else {
+                  return false;
+                }
+              });
               response.forEach(tempData => {
                 tempData.date = new Date(tempData.date);
                 if (tag.uuid === tempData.tag_uuid) {
@@ -214,97 +224,13 @@ export class PlotService {
               this.errorNotifyService.callErrorDialog(`Нет данных у выбранных тегов с uuid:\n [${tagsUUIDWithNoData}]`);
             }
             this.plotlyGraph.data.push(...this.srcData);
-            if (action === 'goto') {
-              this.routingService.gotoPlotPage();
-            } else if (action === 'csv') {
-              downloadCSVFile(this.plotlyGraph.data, `${moment().toISOString()}.csv`);
-            }
+            this.routingService.gotoPlotPage();
             this.loadingService.setLoadingOff();
           }
         }, error => {
           this.errorNotifyService.callErrorDialog('Ошибка: ' + error.error.error);
           this.loadingService.setLoadingOff();
         });
-    }
-  }
-
-  private handleData (response: any[], dataType: string, uuidList: any[], action: string) {
-    this.clearData();
-    this.checkResponse(response, uuidList);
-    if (response.length > 0) {
-      const tagsUUIDWithNoData = [];
-      const tagsWithData = [];
-      for (const tag of this.tagSelection.selected) {
-        if (response.filter((val) => val.tag_uuid === tag.uuid)
-          .length === 0) {
-          tagsUUIDWithNoData.push(tag.uuid);
-        } else {
-          tagsWithData.push(tag);
-        }
-      }
-
-      if (dataType === 'signal') {
-        this.plotlyGraph.layout.title = 'Зависимость уровня сигнала от времени t';
-        this.plotlyGraph.layout.yaxis.title.text = 'Сигнал (dBm)';
-        this.plotlyGraph.layout.yaxis.range = [-130, 0];
-        this.plotlyGraph.layout.yaxis.fixedrange = false;
-        this.plotlyGraph.layout.yaxis.dtick = 10;
-      } else if (dataType === 'batteryVolt') {
-        this.plotlyGraph.layout.title = 'Зависимость напряжение от времени t';
-        this.plotlyGraph.layout.yaxis.title.text = 'Напряжение (В)';
-        this.plotlyGraph.layout.yaxis.range = [0, 5.0];
-        this.plotlyGraph.layout.yaxis.fixedrange = false;
-        this.plotlyGraph.layout.yaxis.dtick = 0.1;
-      }
-
-      tagsWithData.forEach(tag => {
-        const newData = {
-          name: tag.name,
-          x: [],
-          y: [],
-          type: 'scattergl',
-          mode: 'lines+markers',
-          yDataType: 'signal',
-          hovertemplate: "<b>%{fullData.name}</b>" +
-            "<br><b>Время</b>: %{x|%d.%m.%Y %H:%m}<br>",
-        };
-
-        if (dataType === 'signal')
-          newData.hovertemplate += "<b>Сигнал</b>: %{y}<br><extra></extra>";
-        if (dataType === 'batteryVolt')
-          newData.hovertemplate += "<b>Напряжение</b>: %{y}<br><extra></extra>";
-
-        response.forEach(d => {
-          d.date = Date.parse(d.date);
-        });
-
-        response = response.sort((a, b) => a.date - b.date);
-        response.forEach(tempData => {
-          tempData.date = new Date(tempData.date);
-          if (tag.uuid === tempData.tag_uuid) {
-            let y;
-            if (dataType === 'signal') {
-              y = tempData.signal;
-            } else if (dataType === '') {
-              y = tempData.voltage;
-            }
-            newData.y.push(y);
-            newData.x.push(tempData.date);
-          }
-        });
-        this.srcData.push(newData);
-      });
-
-      if (tagsUUIDWithNoData.length > 0) {
-        this.errorNotifyService.callErrorDialog(`Нет данных у выбранных тегов с uuid:\n [${tagsUUIDWithNoData}]`);
-      }
-      this.plotlyGraph.data.push(...this.srcData);
-      if (action === 'goto') {
-        this.routingService.gotoPlotPage();
-      } else if (action === 'csv') {
-        downloadCSVFile(this.plotlyGraph.data, `${moment().toISOString()}.csv`);
-      }
-      this.loadingService.setLoadingOff();
     }
   }
 
@@ -344,11 +270,52 @@ export class PlotService {
     this.setTags(param);
   }
 
-  approximate(allData: any[], begin: moment.Moment, end: moment.Moment) {
-    if (end.diff(begin, "hours") > 24) {
-      for (const tagData of allData) {
-        approximateTagData(tagData, 0.8);
-      }
+  loadCSV(param: { dataType: string; tags: Tag[] }) {
+    switch (this.selectType) {
+      case 'lastDay':
+        this.startDate = moment().subtract(1, 'days');
+        this.endDate = moment();
+        break;
+      case 'lastWeek':
+        this.startDate = moment().subtract(7, 'days');
+        this.endDate = moment();
+        break;
+      case 'lastMonth':
+        this.startDate = moment().subtract(1, 'month');
+        this.endDate = moment();
+        break;
+      case 'period':
+        console.log('The user-specified period type selected.');
+        break;
+      case 'certainDay':
+        this.endDate = moment(this.certainDay);
+        this.startDate = moment(this.certainDay).subtract(1, 'days');
+        break;
+      default:
+        console.log('Type unknown');
+        this.errorNotifyService.callErrorDialog('Unknown select data type.')
+        return;
     }
+    const uuidList = [];
+    this.tagSelection.selected.forEach(tag => {
+      uuidList.push(tag.uuid);
+    });
+
+    this.loadingService.setLoadingOn();
+    return this.measurementService.getMeasurementsCSVByUUID(uuidList, this.startDate.toISOString(), this.endDate.toISOString())
+        .subscribe((response: { csv: string }) => {
+          const filename = moment().toISOString() + '.csv';
+          const a = document.createElement('a');
+          const blob = new Blob([response.csv], {type: 'text/csv' });
+          const url = window.URL.createObjectURL(blob);
+
+          a.href = url;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          this.loadingService.setLoadingOff();
+          a.remove();
+        }, error => {console.log(error);
+          this.loadingService.setLoadingOff();});
   }
 }

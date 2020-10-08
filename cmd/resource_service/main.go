@@ -93,7 +93,8 @@ func main() {
 	}
 	measurementAPI := api.Group("/measurements")
 	{
-		measurementAPI.GET("", tagTempDataController.GetTempByUUID)
+		measurementAPI.GET("", tagTempDataController.GetMeasurementsByUUID)
+		measurementAPI.GET("/csv", tagTempDataController.GetMeasurementsCSVByUUID)
 	}
 	temperatureZoneAPI := api.Group("/temperatureZones")
 	{

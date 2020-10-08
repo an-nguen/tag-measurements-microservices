@@ -18,7 +18,7 @@
           </ng-container>
           <div>
             <button mat-flat-button color="primary" (click)="rebuild()" [disabled]="!f.valid || !plotService.selectType">Перестроить</button>
-            <button mat-flat-button color="accent" (click)="loadCSVfile()" [disabled]="!f.valid || !plotService.selectType">Загрузить CSV файл</button>
+            <button mat-flat-button color="accent"  (click)="loadCSVfile()" [disabled]="!f.valid || !plotService.selectType || csvButtonLoading">Загрузить CSV файл</button>
           </div>
         </form>
       </ng-container>

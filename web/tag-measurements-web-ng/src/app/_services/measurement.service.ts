@@ -19,4 +19,13 @@ export class MeasurementService {
         {params: params}
     );
   }
+
+  getMeasurementsCSVByUUID(uuidList: string[], startDate: any, endDate: any) {
+    let params = new HttpParams();
+    params = params.set("uuidList", uuidList.join(','));
+    params = params.set("startDate", startDate).set("endDate", endDate);
+    return this.httpClient.get(environment.gateway + '/api/measurements/csv',
+        {params: params}
+    );
+  }
 }

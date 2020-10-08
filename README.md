@@ -49,8 +49,8 @@ App architecture:
 # Purpose of services
 
 ## Fetch service
-Fetch service should fetch hourly temperature data from cloud service.  
-It should add and synchronize tag managers and tags.  
+Fetch service should fetch N measurements from cloud service.  
+It should also synchronize tag managers and tags.  
 The main loop logic:
 
                                                                      +-----------------------------------+
@@ -69,8 +69,7 @@ The main loop logic:
                                                                                       
                                             
 ## Resource service
-Resource service provides API that allow fetching data from datasource,  
-and manage permissions by using authentication service through sockets.
+Resource service provides API that allow fetching data from datasource.
 Default response body format - application/json.
 Implemented 8 http endpoints:
  - /api/tagManagers  
