@@ -1,0 +1,16 @@
+package ru.tagmeasurements.fetch_service.dtos;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class GetTagManagersResponse {
+    private List<TagManagerResponseData> d;
+}
+
+

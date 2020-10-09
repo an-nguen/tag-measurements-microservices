@@ -1,6 +1,5 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {Tag} from "../_domains/tag";
 import {WirelessTagAccount} from "../_domains/wirelessTagAccount";
 import {WstAccountService} from "../_services/wst-account.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
@@ -25,6 +24,7 @@ export class WirelessTagAccountsEditDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: WSTEditDataInterface) { }
 
   ngOnInit(): void {
+    this.emailValue = this.data.selectedWstAccount.email;
   }
 
   addWirelessTagAccount() {
@@ -47,13 +47,15 @@ export class WirelessTagAccountsEditDialogComponent implements OnInit {
   }
 
   editWirelessTagAccount() {
+    if (!this.passwordValue) return;
+
     const account = {
       email: this.emailValue,
       password: this.passwordValue,
     }
     this.wirelessTagAccountService.updateWstAccount(account)
       .subscribe((resp: WirelessTagAccount) => {
-
+        this.dialogRef.close(resp);
       })
   }
 }

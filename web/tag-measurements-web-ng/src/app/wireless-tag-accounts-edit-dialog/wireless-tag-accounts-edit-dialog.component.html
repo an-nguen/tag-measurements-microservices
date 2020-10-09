@@ -7,11 +7,11 @@
   <form #fe="ngForm">
     <mat-form-field class="full-width" appearance="outline">
       <mat-label>Почта</mat-label>
-      <input matInput  type="text" ngModel  name="editEmail" required />
+      <input matInput type="text" [(ngModel)]="emailValue"  name="editEmail" required />
     </mat-form-field>
     <mat-form-field class="full-width" appearance="outline">
-      <mat-label>Почта</mat-label>
-      <input matInput  type="text" ngModel  name="editPassword" required />
+      <mat-label>Пароль</mat-label>
+      <input matInput type="password"  [(ngModel)]="passwordValue"  name="editPassword" required />
     </mat-form-field>
   </form>
 </div>

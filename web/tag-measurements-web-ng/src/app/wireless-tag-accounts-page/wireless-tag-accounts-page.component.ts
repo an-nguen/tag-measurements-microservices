@@ -4,6 +4,7 @@ import {WirelessTagAccount} from '../_domains/wirelessTagAccount';
 import {ErrorNotifyService} from '../_services/error-notify.service';
 import {MatDialog} from "@angular/material/dialog";
 import {WirelessTagAccountsEditDialogComponent} from "../wireless-tag-accounts-edit-dialog/wireless-tag-accounts-edit-dialog.component";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
   selector: 'app-wst-accounts-page',
@@ -16,7 +17,8 @@ export class WirelessTagAccountsPageComponent implements OnInit {
 
   constructor(public wstAccountService: WstAccountService,
               public errorNotifyService: ErrorNotifyService,
-              public dialog: MatDialog) { }
+              public dialog: MatDialog,
+              public snackBar: MatSnackBar) { }
 
   ngOnInit(): void {
     this.wstAccountService.getWstAccounts()
@@ -36,10 +38,14 @@ export class WirelessTagAccountsPageComponent implements OnInit {
     })
   }
 
-  edit() {
-    if (this.selectedWstAccount && this.selectedWstAccount.length === 1) {
+  edit(account: WirelessTagAccount) {
+    if (account) {
       this.dialog.open(WirelessTagAccountsEditDialogComponent, {
-        data: {selectedWstAccount: this.selectedWstAccount[0], mode: 'edit'}
+        data: {selectedWstAccount: account, mode: 'edit'}
+      }).afterClosed().subscribe((resp: WirelessTagAccount) => {
+        if (resp) {
+          this.snackBar
+        }
       })
     }
   }

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/fetch_service/fetch_service.iml" filepath="$PROJECT_DIR$/fetch_service/fetch_service.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/tag-measurements-microservices.iml" filepath="$PROJECT_DIR$/.idea/tag-measurements-microservices.iml" />
     </modules>
   </component>

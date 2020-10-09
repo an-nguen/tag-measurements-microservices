@@ -4,11 +4,14 @@
   </mat-card-title>
   <mat-card-content>
     <mat-selection-list [(ngModel)]="selectedWstAccount" dense [multiple]="false">
-      <mat-list-option *ngFor="let wstAccount of wstAccountList" [value]="wstAccount">{{wstAccount.email}}</mat-list-option>
+      <mat-list-option *ngFor="let wstAccount of wstAccountList" [value]="wstAccount">
+        <div style="display: inline-block">{{wstAccount.email}}
+          <button mat-icon-button (click)="edit(wstAccount)" ><mat-icon prefix>edit</mat-icon></button>
+        </div>
+      </mat-list-option>
     </mat-selection-list>
   </mat-card-content>
   <mat-card-actions>
     <button mat-flat-button style="margin-right: 6px" color="primary" (click)="create()"><mat-icon prefix>add</mat-icon>Добавить</button>
-    <button mat-flat-button style="background-color: green; color: white" (click)="edit()"><mat-icon prefix>edit</mat-icon>Изменить</button>
   </mat-card-actions>
 </mat-card>

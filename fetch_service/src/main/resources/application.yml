@@ -1,0 +1,35 @@
+spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://10.10.1.6:5432/tag_measurements
+    username: an
+    password: a4ryFcFQLz
+    hikari:
+      maximumPoolSize: 20
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+      enable_lazy_load_no_trans: true
+    hibernate:
+      ddl-auto: update
+    generate-ddl: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  gson:
+    date-format: MM-dd-yyyy
+  mvc:
+    converters:
+      preferred-json-mapper: gson
+server:
+  port: 9000
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 512
+
+jwt:
+  secret: KgT!+nXe_e+L&'B
