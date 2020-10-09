@@ -27,7 +27,7 @@ public class Tag {
     private LocalDate verificationDate;
     private Double higherTemperatureLimit;
     private Double lowerTemperatureLimit;
-    @ManyToMany
+    @ManyToMany(mappedBy = "tags")
     private List<TemperatureZone> temperatureZones;
 
     @Transient

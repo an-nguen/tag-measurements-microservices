@@ -45,7 +45,7 @@ export class EditPrivilegeDialogComponent implements OnInit {
         this.snackBar.open(`Привилегия ${resp.name} создана.`, 'Закрыть', {
           duration: 5000
         });
-        this.dialogRef.close(resp);
+        this.dialogRef.close();
       }, error => {
         this.snackBar.open(`Привилегия не создана. Ошибка: ${error.error}`, 'Закрыть', {
           duration: 5000
@@ -65,7 +65,7 @@ export class EditPrivilegeDialogComponent implements OnInit {
       this.snackBar.open(`Привилегия ${resp.name} обновлена.`, 'Закрыть', {
         duration: 5000
       });
-      this.dialogRef.close(resp);
+      this.dialogRef.close();
     }, error => {
       this.snackBar.open(`Привилегия не обновлена. Ошибка: ${error.error}`, 'Закрыть', {
         duration: 5000

@@ -88,7 +88,7 @@ func (repo UserRepository) AuthUser(username string, password string, secret str
 func (repo UserRepository) UpdateUser(user models.User) (models.User, error) {
 	var databaseUser models.User
 
-	if err := repo.DataSource.Find(&databaseUser, "id = $1", databaseUser.ID).Error; err != nil {
+	if err := repo.DataSource.Find(&databaseUser, "id = $1", user.ID).Error; err != nil {
 		return models.User{}, err
 	}
 

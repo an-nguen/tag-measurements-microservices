@@ -29,6 +29,9 @@ public class TagManager {
     @Transient
     private String radioId;
 
+    @Transient
+    private String sessionId;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

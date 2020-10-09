@@ -32,7 +32,7 @@ export class RoleService {
   }
 
   createRole(role: Role) {
-    return this.httpClient.post(environment.gateway + '/api/role/', {...role});
+    return this.httpClient.post(environment.gateway + '/api/role', {...role});
   }
 
   updateRole(role: Role) {

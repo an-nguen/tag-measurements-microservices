@@ -91,17 +91,12 @@ func (c MeasurementController) GetMeasurementsCSVByUUID(ctx *gin.Context) {
 			Find(&measurementsTemp)
 		measurements[tag.Name] = measurementsTemp
 	}
-	responseString := ""
-	if err != nil {
-		panic(err)
-	}
-
-	responseString += "Имя тега;Дата;Температура;Влажность;Напряжение;Вольтаж;\n"
+	responseString := "Name;Date;Temperature;Humidity\n"
 	for k, v := range measurements {
 		for _, data := range v {
-			responseString += fmt.Sprintf("%s;%s;%f;%f;%f;%f;\n",
+			responseString += fmt.Sprintf("%s;%s;%f;%f;\n",
 				k, data.Date.Format("02.01.2006 15:04:05-0700"),
-				data.Temperature, data.Humidity, data.Voltage, data.Signal)
+				data.Temperature, data.Humidity)
 		}
 	}
 	ctx.JSON(http.StatusOK, gin.H{"csv": responseString})

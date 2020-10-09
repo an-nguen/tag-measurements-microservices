@@ -38,7 +38,7 @@ export class EditRoleDialogComponent implements OnInit {
         this.snackBar.open(`Роль ${resp.name} создана.`, 'Закрыть', {
           duration: 5000
         });
-        this.dialogRef.close(resp);
+        this.dialogRef.close();
       }, error => {
         this.snackBar.open(`Роль не создана. Ошибка: ${error.error}`, 'Закрыть', {
           duration: 5000
@@ -54,7 +54,7 @@ export class EditRoleDialogComponent implements OnInit {
         this.snackBar.open(`Роль ${resp.name} обновлена.`, 'Закрыть', {
           duration: 5000
         });
-        this.dialogRef.close({role: resp});
+        this.dialogRef.close();
       }, error => {
         this.snackBar.open(`Роль не обновлена. Ошибка: ${error.error}`, 'Закрыть', {
           duration: 5000

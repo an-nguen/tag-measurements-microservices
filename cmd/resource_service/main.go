@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
 
 	"tag-measurements-microservices/internal/resource_service/controllers"
@@ -63,6 +64,7 @@ func main() {
 		Secret: appConfig.HmacSecret,
 		UserDB: userDb,
 	}
+	router.Use(gzip.Gzip(gzip.BestCompression))
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AddAllowHeaders("authorization")
 	corsConfig.AddExposeHeaders("authorization")

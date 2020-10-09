@@ -65,8 +65,10 @@ export class AdminSettingsComponent implements OnInit {
         user: {},
         mode: 'create'
       }
-    }).afterClosed().subscribe((result) => {
-      console.log(result)
+    }).afterClosed().subscribe(() => {
+      this.userService.getUsers().add(() => {
+        this.userDataSource.data = this.userService.users;
+      })
     })
   }
 
@@ -77,15 +79,18 @@ export class AdminSettingsComponent implements OnInit {
         user: user,
         mode: 'edit'
       }
-    }).afterClosed().subscribe((result) => {
-      console.log(result)
+    }).afterClosed().subscribe(() => {
+      this.userService.getUsers().add(() => {
+        this.userDataSource.data = this.userService.users;
+      })
     })
   }
 
   deleteUser(user: User) {
     this.userService.deleteUser(user).subscribe((resp: any) => {
-      const id = this.userDataSource.data.findIndex((value => value.id === user.id));
-      this.userDataSource.data.splice(id, 1);
+      this.userService.getUsers().add(() => {
+        this.userDataSource.data = this.userService.users;
+      })
       this.snackBar.open(`Пользователь ${user.username} удалён.`, 'Закрыть', {
         duration: 5000
       });
@@ -103,10 +108,10 @@ export class AdminSettingsComponent implements OnInit {
         role: {},
         mode: 'create'
       }
-    }).afterClosed().subscribe((result: Role) => {
-      if (!result) return;
-
-      this.roleDataSource.data.push(result);
+    }).afterClosed().subscribe(() => {
+      this.roleService.getRoles().add(() => {
+        this.roleDataSource.data = this.roleService.roles;
+      })
     })
   }
 
@@ -117,31 +122,28 @@ export class AdminSettingsComponent implements OnInit {
         role: role,
         mode: 'edit'
       }
-    }).afterClosed().subscribe((result: Role) => {
-      if (!result) return;
-
-      const id = this.roleDataSource.data.findIndex(role => role.id === result.id);
-      if (id) {
-        this.roleDataSource.data.splice(id, 1, result)
-      }
+    }).afterClosed().subscribe(() => {
+      this.roleService.getRoles().add(() => {
+        this.roleDataSource.data = this.roleService.roles;
+      })
     })
   }
 
   deleteRole(role: Role) {
     this.roleService.deleteRole(role)
-      .subscribe((resp) => {
-          const id = this.roleDataSource.data.findIndex((value => value.id === role.id));
-          if (id)
-            this.roleDataSource.data.splice(id, 1);
-          this.snackBar.open(`Роль ${role.name} удалена.`, 'Закрыть', {
-            duration: 5000
-          });
-        }, error => {
-          this.snackBar.open(`Роль не удалена. Ошибка: ${error.error}`, 'Закрыть', {
-            duration: 5000
-          });
-        }
-      );
+        .subscribe((resp) => {
+          this.roleService.getRoles().add(() => {
+            this.roleDataSource.data = this.roleService.roles;
+          })
+              this.snackBar.open(`Роль ${role.name} удалена.`, 'Закрыть', {
+                duration: 5000
+              });
+            }, error => {
+              this.snackBar.open(`Роль не удалена. Ошибка: ${error.error}`, 'Закрыть', {
+                duration: 5000
+              });
+            }
+        );
   }
 
   createPrivilege() {
@@ -151,10 +153,10 @@ export class AdminSettingsComponent implements OnInit {
         privilege: {},
         mode: 'create'
       }
-    }).afterClosed().subscribe((result: Privilege) => {
-      if (!result) return;
-
-      this.privilegeDataSource.data.push(result);
+    }).afterClosed().subscribe(() => {
+      this.privilegeService.getPrivileges().add(() => {
+        this.privilegeDataSource.data = this.privilegeService.privileges;
+      });
     })
   }
 
@@ -165,26 +167,22 @@ export class AdminSettingsComponent implements OnInit {
         privilege: privilege,
         mode: 'edit'
       }
-    }).afterClosed().subscribe((result: Privilege) => {
-      if (!result) return;
-
-      const id = this.privilegeDataSource.data.findIndex(privilege => privilege.id === result.id);
-      if (id) {
-        this.privilegeDataSource.data.splice(id, 1, result)
-      }
+    }).afterClosed().subscribe(() => {
+      this.privilegeService.getPrivileges().add(() => {
+        this.privilegeDataSource.data = this.privilegeService.privileges;
+      });
     })
   }
 
   deletePrivilege(removedPrivilege: Privilege) {
     this.privilegeService.deletePrivilege(removedPrivilege)
-      .subscribe((resp) => {
-        this.snackBar.open(`Привилегия ${removedPrivilege.name} удалена.`, 'Закрыть', {
-          duration: 5000
-        });
-        const id = this.privilegeDataSource.data.findIndex(privilege => privilege.id === removedPrivilege.id);
-        if (id) {
-          this.privilegeDataSource.data.splice(id, 1)
-        }
-      })
+        .subscribe((resp) => {
+          this.privilegeService.getPrivileges().add(() => {
+            this.privilegeDataSource.data = this.privilegeService.privileges;
+          });
+          this.snackBar.open(`Привилегия ${removedPrivilege.name} удалена.`, 'Закрыть', {
+            duration: 5000
+          });
+        })
   }
 }

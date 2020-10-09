@@ -1,9 +1,9 @@
 spring:
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://10.10.1.6:5432/tag_measurements
+    url: jdbc:postgresql://10.10.10.23:5432/tag_measurements
     username: an
-    password: a4ryFcFQLz
+    password: olS8XI5P$s78p
     hikari:
       maximumPoolSize: 20
   jpa:
@@ -30,6 +30,3 @@ server:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
     min-response-size: 512
-
-jwt:
-  secret: KgT!+nXe_e+L&'B

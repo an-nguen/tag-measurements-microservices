@@ -19,6 +19,7 @@ func (repo RoleRepository) GetRoles() ([]models.Role, error) {
 }
 
 func (repo RoleRepository) CreateRole(role models.Role) (models.Role, error) {
+	role.ID = 0
 	if err := repo.DataSource.Create(&role).Error; err != nil {
 		return models.Role{}, err
 	}

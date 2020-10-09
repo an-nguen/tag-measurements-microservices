@@ -17,9 +17,7 @@ public class ScheduledService {
     private final MeasurementRepository measurementRepository;
     private final WirelessTagAccountRepository wirelessTagAccountRepository;
     private final ApiWrapperService apiWrapperService;
-    private final String[] types = {
-            "temperature", "cap", "batteryVolt", "signal"
-    };
+
 
     @Autowired
     public ScheduledService(TagManagerRepository tagManagerRepository,

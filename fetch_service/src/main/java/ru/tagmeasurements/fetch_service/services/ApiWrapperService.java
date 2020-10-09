@@ -1,8 +1,9 @@
 package ru.tagmeasurements.fetch_service.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -12,18 +13,21 @@ import ru.tagmeasurements.fetch_service.models.Tag;
 import ru.tagmeasurements.fetch_service.models.TagManager;
 import ru.tagmeasurements.fetch_service.models.WirelessTagAccount;
 
-import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class ApiWrapperService {
     private final HttpClientService client;
     private final Gson gson;
+    private final Logger log = LoggerFactory.getLogger(ApiWrapperService.class);
 
     @Autowired
     public ApiWrapperService(HttpClientService client, Gson gson) {
@@ -84,17 +88,17 @@ public class ApiWrapperService {
         return result;
     }
 
-    public List<Tag> getTags(String sessionId, List<TagManager> cloudTagManagers) throws JsonProcessingException {
+    public List<Tag> getTags(String sessionId, List<TagManager> cloudTagManagers) {
         var result = new ArrayList<Tag>();
         for (var tm: cloudTagManagers) {
             var sessionIdSelected = selectTagManager(tm.getMac().replaceAll(":", "").toUpperCase(), sessionId);
+            tm.setSessionId(sessionIdSelected);
 
-            var response = client.post("/ethClient.asmx/GetTagList",
-                    "{}", getHttpHeaders(sessionIdSelected));
-            var jsonResponse = gson.fromJson(response.getBody(), GetTagListResponse.class);
+            var jsonResponse = getTagListResponse(sessionIdSelected);
             for (var cloudTag: jsonResponse.getD()) {
                 var tag = new Tag();
                 tag.parse(cloudTag);
+                tag.setVerificationDate(LocalDate.now());
                 tag.parse(getTagConfig(sessionIdSelected, tag));
                 tag.setMac(tm.getMac());
                 result.add(tag);
@@ -103,44 +107,74 @@ public class ApiWrapperService {
         return result;
     }
 
-    public List<Measurement> getMeasurements(String sessionId, String type, List<Tag> cloudTags) throws JsonProcessingException {
-        var result = new ArrayList<Measurement>();
-        var tags = cloudTags.stream()
-                .map(Tag::getSlaveId)
-                .sorted(Comparator.naturalOrder())
-                .collect(Collectors.toList());
-        var request = new GetMultiTagStatsRawRequest();
-        request.setIds(tags);
-        request.setFromDate(LocalDate.now().minus(75, ChronoUnit.DAYS));
-        request.setToDate(LocalDate.now());
-        request.setType(type);
-        var jsonRequest =  gson.toJson(request);
-        var response = client.post("/ethLogs.asmx/GetMultiTagStatsRaw",
-                jsonRequest, getHttpHeaders(sessionId));
-        var json = gson.fromJson(response.getBody(), GetMultiTagStatsRawResponse.class);
-        if (json == null) {
-            return null;
+    private GetTagListResponse getTagListResponse(String sessionId) {
+        var response = client.post("/ethClient.asmx/GetTagList",
+                "{}", getHttpHeaders(sessionId));
+        return gson.fromJson(response.getBody(), GetTagListResponse.class);
+    }
+
+    public List<Tag> getTags(TagManager tagManager) {
+        var result = new ArrayList<Tag>();
+        var jsonResponse = getTagListResponse(tagManager.getSessionId());
+        for (var cloudTag: jsonResponse.getD()) {
+            var tag = new Tag();
+            tag.parse(cloudTag);
+            tag.setVerificationDate(LocalDate.now());
+            tag.parse(getTagConfig(tagManager.getSessionId(), tag));
+            tag.setMac(tagManager.getMac());
+            result.add(tag);
         }
-        var jsonResponse = json.getD();
-        for (var stat: jsonResponse.getStats()) {
-            var date = LocalDate.parse(stat.getDate(), DateTimeFormatter.ofPattern("M/d/yyyy"));
-            for (var i = 0; i < tags.size(); i++) {
-                for (var j = 0; j < stat.values.size(); j++) {
-                    var measurement = new Measurement();
-                    measurement
-                            .setDate(LocalDateTime
-                                    .parse(date.format(DateTimeFormatter.ISO_DATE) + "T00:00:00")
-                                    .plus(stat.tods.get(i).get(j), ChronoUnit.SECONDS));
-                    switch (type) {
-                        case "temperature" -> measurement.setTemperature(stat.values.get(i).get(j));
-                        case "cap" -> measurement.setHumidity(stat.values.get(i).get(j));
-                        case "batteryVolt" -> measurement.setVoltage(stat.values.get(i).get(j));
-                        case "signal" -> measurement.setSignal(stat.values.get(i).get(j));
+
+        return result;
+    }
+
+    public List<Measurement> getMeasurements(List<TagManager> tagManagers, String type) {
+        var result = new ArrayList<Measurement>();
+        for (var tm: tagManagers) {
+            var cloudTags = getTags(tm);
+            var tags = cloudTags.stream()
+                    .map(Tag::getSlaveId)
+                    .sorted(Comparator.naturalOrder())
+                    .collect(Collectors.toList());
+            var request = new GetMultiTagStatsRawRequest();
+            var responses = new ArrayList<GetMultiTagStatsRawResponse>();
+            for (var tag : tags) {
+                try {
+                    request.setIds(Collections.singletonList(tag));
+                    request.setFromDate(LocalDate.now().minus(75, ChronoUnit.DAYS));
+                    request.setToDate(LocalDate.now());
+                    request.setType(type);
+                    var jsonRequest = gson.toJson(request);
+                    var response = client.post("/ethLogs.asmx/GetMultiTagStatsRaw",
+                            jsonRequest, getHttpHeaders(tm.getSessionId()));
+                    if (response.getStatusCode().is2xxSuccessful()) {
+                        responses.add(gson.fromJson(response.getBody(), GetMultiTagStatsRawResponse.class));
                     }
-                    int finalI = i;
-                    var foundTag = cloudTags.stream().filter(tag -> tag.getSlaveId().equals(tags.get(finalI))).findFirst();
-                    foundTag.ifPresent(tag -> measurement.setTagUUID(tag.getUuid()));
-                    result.add(measurement);
+                } catch (Exception e) {
+                    log.error(e.getLocalizedMessage());
+                }
+            }
+            for (var json : responses) {
+                var jsonResponse = json.getD();
+                for (var stat : jsonResponse.getStats()) {
+                    var date = LocalDate.parse(stat.getDate(), DateTimeFormatter.ofPattern("M/d/yyyy"));
+                    for (var j = 0; j < stat.values.size(); j++) {
+                        var measurement = new Measurement();
+                        measurement
+                                .setDate(LocalDateTime
+                                        .parse(date.format(DateTimeFormatter.ISO_DATE) + "T00:00:00")
+                                        .plus(stat.tods.get(0).get(j), ChronoUnit.SECONDS));
+                        switch (type) {
+                            case "temperature" -> measurement.setTemperature(stat.values.get(0).get(j));
+                            case "cap" -> measurement.setHumidity(stat.values.get(0).get(j));
+                            case "batteryVolt" -> measurement.setVoltage(stat.values.get(0).get(j));
+                            case "signal" -> measurement.setSignal(stat.values.get(0).get(j));
+                        }
+                        var foundTag = cloudTags.stream().filter(tag -> tag.getSlaveId().equals(stat.getIds().get(0))).findFirst();
+                        foundTag.ifPresent(tag -> measurement.setTagUUID(tag.getUuid()));
+                        result.add(measurement);
+                    }
+
                 }
             }
         }

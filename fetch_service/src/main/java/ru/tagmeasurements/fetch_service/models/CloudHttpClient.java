@@ -8,9 +8,10 @@ import ru.tagmeasurements.fetch_service.repositories.TagManagerRepository;
 import ru.tagmeasurements.fetch_service.repositories.TagRepository;
 import ru.tagmeasurements.fetch_service.services.ApiWrapperService;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -23,17 +24,27 @@ public class CloudHttpClient {
     private List<TagManager> tagManagerList;
     private List<Tag> tagList;
     private List<Measurement> measurements;
-
+    private final String[] types = {
+            "temperature", "cap", "batteryVolt", "signal"
+    };
     public CloudHttpClient(WirelessTagAccount account, ApiWrapperService apiWrapperService) {
         this.account = account;
         this.service = apiWrapperService;
     }
     public void init() {
+        this.measurements = new LinkedList<>();
         try {
             this.sessionId = service.getSessionId(account);
             this.tagManagerList = service.getTagManagers(sessionId, account);
             this.tagList = service.getTags(sessionId, this.tagManagerList);
-            this.measurements = service.getMeasurements(sessionId, "temperature", this.tagList);
+            for (var type: types) {
+                var measurements = service.getMeasurements(this.tagManagerList, type);
+                if (measurements != null) {
+                    if (measurements.size() > 0) {
+                        this.measurements.addAll(measurements);
+                    }
+                }
+            }
         } catch (Exception e) {
             log.error(e.getLocalizedMessage());
         }
@@ -54,6 +65,14 @@ public class CloudHttpClient {
             }
         }
         this.tagList.removeAll(tagList);
+        tagList.forEach(tag -> {
+            var found = tagRepository.findById(tag.getUuid());
+            found.ifPresentOrElse(t -> {
+                tag.setVerificationDate(t.getVerificationDate());
+            }, () -> {
+                tag.setVerificationDate(LocalDate.now());
+            });
+        });
         if (this.tagList.size() > 0) {
             tagRepository.saveAll(this.tagList);
         }
