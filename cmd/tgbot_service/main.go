@@ -2,27 +2,20 @@ package main
 
 import (
 	"fmt"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/jinzhu/gorm"
 	"log"
-	"os"
+	"time"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"gorm.io/gorm"
+
 	"tag-measurements-microservices/internal/tgbot_service/structures"
 	"tag-measurements-microservices/pkg/datasource"
 	"tag-measurements-microservices/pkg/models"
-	"time"
 )
 
 var FILENAME = "/configs/config_tgbot.json"
 
 func main() {
-	if tz := os.Getenv("TZ"); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
-	}
-
 	config := structures.ReadAppConfig(FILENAME)
 	db := datasource.InitDatabaseConnection(config.Host, config.Port, config.User, config.Password, config.DbName)
 	var groupId = config.GroupId

@@ -2,9 +2,11 @@ package datasource
 
 import (
 	"fmt"
-	"github.com/jinzhu/gorm"
+
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/streadway/amqp"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 /**
@@ -15,9 +17,9 @@ import (
  *	returns: sql.DB struct
  **/
 func InitDatabaseConnection(host string, port string, user string, pass string, dbname string) *gorm.DB {
-	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-		user, pass, host, port, dbname)
-	db, err := gorm.Open("postgres", connStr)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Moscow",
+		host, user, pass, dbname, port)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}

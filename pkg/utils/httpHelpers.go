@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -32,7 +31,6 @@ func Serialize(v interface{}) ([]byte, error) {
 func CreateRequest(method string, url string, body io.Reader) *http.Request {
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
-		log.Println("[ERROR - CreateRequest] Failed create request. ", err)
 		return nil
 	}
 	if request != nil {
@@ -45,7 +43,6 @@ func SendRequest(client *http.Client, req *http.Request) (*http.Response, string
 	// HTTP client send request and get response
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Println("[ERROR - SendRequest] Failed to send request. ", err)
 		return nil, "", err
 	}
 	defer resp.Body.Close()

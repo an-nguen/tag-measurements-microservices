@@ -7,11 +7,10 @@ import (
 	"net"
 	"net/mail"
 	"net/smtp"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"tag-measurements-microservices/internal/notify_service/structures"
 	"tag-measurements-microservices/pkg/datasource"
@@ -21,14 +20,6 @@ import (
 var FILENAME = "/configs/config_notify.json"
 
 func main() {
-	if tz := os.Getenv("TZ"); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
-	}
-
 	var senderEmail = mail.Address{Address: "td-notify@dn-serv.ru"}
 	var senderPass = "ifdxhgbrqmekzsti"
 	var serverName = "smtp.yandex.ru:465"

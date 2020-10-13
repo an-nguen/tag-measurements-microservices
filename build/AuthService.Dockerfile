@@ -1,7 +1,5 @@
-FROM golang:alpine AS builder
+FROM golang:1.15.2 AS builder
 
-RUN apk update && apk add --no-cache git
-RUN apk --no-cache add tzdata
 # Create appuser.
 ENV USER=appuser
 ENV UID=10001
@@ -28,14 +26,12 @@ RUN readlink -f auth_service
 FROM scratch
 
 # Import the user and group files from the builder.
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 
 COPY --from=builder /go/src/auth_service /go/src/auth_service
 COPY --from=builder /go/src/configs/config_auth.json /go/src/configs/config_auth.json
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-ENV TZ=Europe/Moscow
 WORKDIR /go/src/
 
 # Use an unprivileged user.

@@ -1,14 +1,12 @@
 package repository
 
 import (
-	"errors"
 	"strconv"
 	"time"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 
 	"tag-measurements-microservices/pkg/models"
 )
@@ -75,11 +73,11 @@ func (repo UserRepository) AuthUser(username string, password string, secret str
 		return "", models.User{}, err
 	}
 
-	if repo.DataSource.
+	if err := repo.DataSource.
 		Preload("Roles").
 		Where("id = ?", user.ID).
-		First(&user).RecordNotFound() {
-		return "", models.User{}, errors.New("User not found")
+		First(&user).Error; err != nil {
+		return "", models.User{}, err
 	}
 
 	return token, user, nil

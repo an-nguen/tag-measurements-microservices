@@ -7,11 +7,11 @@
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
       <jdbc-url>jdbc:postgresql://10.10.1.6:5432/tag_measurements</jdbc-url>
     </data-source>
-    <data-source source="LOCAL" name="postgres@10.10.10.23" uuid="d5c53ba2-bfca-4cdf-afd3-0c1b461e0e26">
+    <data-source source="LOCAL" name="tag_measurements@10.10.10.23" uuid="d5c53ba2-bfca-4cdf-afd3-0c1b461e0e26">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://10.10.10.23:5432/postgres</jdbc-url>
+      <jdbc-url>jdbc:postgresql://10.10.10.23:5432/tag_measurements</jdbc-url>
     </data-source>
   </component>
 </project>

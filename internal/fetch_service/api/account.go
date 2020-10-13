@@ -2,12 +2,11 @@ package api
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"tag-measurements-microservices/pkg/dto"
 	"tag-measurements-microservices/pkg/models"
@@ -22,11 +21,11 @@ import (
  */
 func GetSessionId(data *dto.LoginDataRequest) (string, error) {
 	client := &http.Client{}
-	jsonData, parseErr := utils.Serialize(data)
+	jsonData, err := utils.Serialize(data)
 
-	if parseErr != nil {
-		log.Println("[ERROR - GetSessionId] Parse error - ", parseErr)
-		return "", parseErr
+	if err != nil {
+		log.Error("Parse error - ", err)
+		return "", err
 	}
 
 	request := utils.CreateRequest("POST", "http://wirelesstag.net/ethAccount.asmx/SignIn",
@@ -34,7 +33,6 @@ func GetSessionId(data *dto.LoginDataRequest) (string, error) {
 
 	response, _, err := utils.SendRequest(client, request)
 	if err != nil {
-		utils.LogPrintln("GetSessionId", fmt.Sprintln("SendRequest error", err))
 		return "", errors.New("GetSessionId: SendRequest - network error")
 	}
 
@@ -54,17 +52,17 @@ func GetSessionId(data *dto.LoginDataRequest) (string, error) {
  *
  *		returns: error
  */
-func (wc *WstClient) SelectTagManager(MACAddr string) error {
+func (c *CloudClient) SelectTagManager(MACAddr string) error {
 	reqBody, _ := json.Marshal(map[string]string{
 		"mac": MACAddr,
 	})
-	req := utils.CreateRequest("POST", wc.HostUrl+"/ethAccount.asmx/SelectTagManager",
+	req := utils.CreateRequest("POST", c.HostUrl+"/ethAccount.asmx/SelectTagManager",
 		bytes.NewBuffer(reqBody))
 	defer req.Body.Close()
-	req.Header.Set("Cookie", wc.SessionId)
-	resp, _, err := utils.SendRequest(wc.Client, req)
+	req.Header.Set("Cookie", c.SessionId)
+	resp, _, err := utils.SendRequest(c.Client, req)
 	if err != nil {
-		log.Println("SelectTagManager", "Error from SendRequest")
+		log.Error(err)
 		return err
 	}
 	if resp.StatusCode != 200 {
@@ -72,62 +70,62 @@ func (wc *WstClient) SelectTagManager(MACAddr string) error {
 	}
 
 	if resp.Header.Get("Set-Cookie") != "" {
-		wc.SessionId = resp.Header.Get("Set-Cookie")
+		c.SessionId = resp.Header.Get("Set-Cookie")
 		return nil
 	}
 
 	return errors.New("failed to set cookie")
 }
 
-/*		Public function: GetTagManagers
+/*		Public function: GetTagManagersApi
  *		---------------------------
  *      Fetch list of managers from remote API service
  *
  *		returns: dto.TagManagersResponse
  */
-func (wc *WstClient) GetTagManagers() (dto.TagManagersResponse, error) {
-	req := utils.CreateRequest("POST", wc.HostUrl+"/ethAccount.asmx/GetTagManagers",
+func (c *CloudClient) GetTagManagersApi() (dto.TagManagersResponse, error) {
+	req := utils.CreateRequest("POST", c.HostUrl+"/ethAccount.asmx/GetTagManagers",
 		bytes.NewBuffer([]byte(`{}`)))
-	req.Header.Set("Cookie", wc.SessionId)
-	_, body, err := utils.SendRequest(wc.Client, req)
+	req.Header.Set("Cookie", "WTAG="+c.SessionId)
+	_, body, err := utils.SendRequest(c.Client, req)
 	if err != nil {
-		log.Println("GetTagManagers", "Error from SendRequest")
+		log.Error(err)
 		return dto.TagManagersResponse{}, err
 	}
 
-	// Extract json to struct WstDto
+	// Extract json to struct WirelessTagResponse
 	var jsonMap dto.TagManagersResponse
 	_ = json.Unmarshal([]byte(body), &jsonMap)
 
 	return jsonMap, nil
 }
 
-func GetTagManagers(sessionId string, hostUrl string, client *http.Client) ([]models.TagManager, error) {
+func GetTagManagersApi(sessionId string, hostUrl string, client *http.Client) ([]models.TagManager, error) {
 	req := utils.CreateRequest("POST", hostUrl+"/ethAccount.asmx/GetTagManagers",
 		bytes.NewBuffer([]byte(`{}`)))
 	req.Header.Set("Cookie", "WTAG="+sessionId)
 	_, body, err := utils.SendRequest(client, req)
 	if err != nil {
-		utils.LogError("GetTagManagers", "Error from SendRequest")
+		log.Error(err)
 		return nil, err
 	}
 
 	// Deserialize json to struct WstDtoParseMAC
-	var jsonMap dto.WstDto
+	var jsonMap dto.WirelessTagResponse
 	err = json.Unmarshal([]byte(body), &jsonMap)
 	if err != nil {
-		utils.LogError("GetTagManagers", "Failed to deserialize json object to WstDtoParseMAC")
+		log.Error(err)
 		return nil, err
 	}
 
 	var tagManagers []models.TagManager
-	for _, tagManager := range jsonMap.D {
-		macAddr := tagManager["mac"].(string)
+	for _, item := range jsonMap.D {
+		macAddr := item.Mac
 		macAddr = strings.ToLower(macAddr)
 		macAddr = strings.ReplaceAll(macAddr, ":", "")
 		item := models.TagManager{
 			Mac:  macAddr,
-			Name: tagManager["name"].(string),
+			Name: item.Name,
 		}
 
 		tagManagers = append(tagManagers, item)

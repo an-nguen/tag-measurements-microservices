@@ -1,44 +1,49 @@
 package ru.tagmeasurements.fetch_service.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.tagmeasurements.fetch_service.models.CloudHttpClient;
-import ru.tagmeasurements.fetch_service.repositories.MeasurementRepository;
-import ru.tagmeasurements.fetch_service.repositories.TagManagerRepository;
-import ru.tagmeasurements.fetch_service.repositories.TagRepository;
-import ru.tagmeasurements.fetch_service.repositories.WirelessTagAccountRepository;
 
 @Service
 public class ScheduledService {
+  private final Logger log = LoggerFactory.getLogger(ScheduledService.class);
 
-    private final TagManagerRepository tagManagerRepository;
-    private final TagRepository tagRepository;
-    private final MeasurementRepository measurementRepository;
-    private final WirelessTagAccountRepository wirelessTagAccountRepository;
-    private final ApiWrapperService apiWrapperService;
+  private final TagService tagService;
+  private final TagManagerService tagManagerService;
+  private final MeasurementService measurementService;
+  private final WirelessTagAccountService wirelessTagAccountService;
+  private final String[] types = {
+    "temperature", "cap", "batteryVolt", "signal"
+  };
 
+  @Autowired
+  public ScheduledService(TagService tagService,
+                          TagManagerService tagManagerService,
+                          MeasurementService measurementService,
+                          WirelessTagAccountService wirelessTagAccountService) {
+    this.tagService = tagService;
+    this.tagManagerService = tagManagerService;
+    this.measurementService = measurementService;
+    this.wirelessTagAccountService = wirelessTagAccountService;
+  }
 
-    @Autowired
-    public ScheduledService(TagManagerRepository tagManagerRepository,
-                            TagRepository tagRepository,
-                            MeasurementRepository measurementRepository, WirelessTagAccountRepository wirelessTagAccountRepository,
-                            ApiWrapperService apiWrapperService) {
-        this.tagManagerRepository = tagManagerRepository;
-        this.tagRepository = tagRepository;
-        this.measurementRepository = measurementRepository;
-        this.wirelessTagAccountRepository = wirelessTagAccountRepository;
-        this.apiWrapperService = apiWrapperService;
+  @Scheduled(fixedDelay = 15000)
+  private void clientFetch() {
+    log.info("Begin client fetch");
+    var accounts = wirelessTagAccountService.findAll();
+    for (var account: accounts) {
+      var client = new CloudHttpClient(account);
+      client.setSessionId(tagManagerService.getSessionId(client.getAccount()));
+      client.setTagManagerList(tagManagerService.getTagManagers(client));
+      client.setTagList(tagService.getTags(client));
+      measurementService.storeMeasurements(client.getTagManagerList(), types);
+      tagService.storeTags(client, tagManagerService.findAllByEmail(client.getAccount().getEmail()));
+      tagManagerService.storeTagManagers(client);
     }
-
-    @Scheduled(fixedRate = 15000)
-    private void clientFetch() {
-        var accounts = wirelessTagAccountRepository.findAll();
-        for (var account: accounts) {
-            var client = new CloudHttpClient(account, apiWrapperService);
-            client.init();
-            client.store(tagManagerRepository, tagRepository, measurementRepository);
-        }
-    }
+    log.info("End client fetch");
+  }
 
 }

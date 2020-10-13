@@ -2,9 +2,10 @@ package repository
 
 import (
 	"errors"
-	"github.com/jinzhu/gorm"
-	"github.com/lib/pq"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"tag-measurements-microservices/pkg/models"
 	"tag-measurements-microservices/pkg/utils"
@@ -34,17 +35,10 @@ func (repo MeasurementRepository) GetMeasurementByUUIDs(
 		return res, errors.New("params cannot be nil")
 	}
 
-	rows, err := repo.DataSource.DB().Query("SELECT date, temperature, humidity, voltage, signal, tag_uuid FROM measurement WHERE tag_uuid = ANY($1) AND date BETWEEN $2 AND $3",
-		pq.StringArray(uuidList), startDate, endDate)
-	if err != nil {
-		return nil, err
-	}
-	for rows.Next() {
-		var d models.Measurement
-		if err := rows.Scan(&d.Date, &d.Temperature, &d.Humidity, &d.Voltage, &d.Signal, &d.TagUUID); err != nil {
-			continue
-		}
-		res = append(res, d)
+	if err := repo.DataSource.
+		Where("tag_uuid::varchar IN ? AND date BETWEEN ? AND ?", uuidList, startDate, endDate).
+		Find(&res).Error; err != nil {
+		log.Error(err)
 	}
 	if epsilon > 0.0 {
 		res = utils.DouglasPeuckerMeasurement(res, epsilon, "temperature")

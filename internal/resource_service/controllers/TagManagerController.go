@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+
 	"tag-measurements-microservices/pkg/models"
 	"tag-measurements-microservices/pkg/repository"
-	"tag-measurements-microservices/pkg/utils"
 )
 
 type TagManagerController struct {
@@ -32,7 +34,7 @@ func (c TagManagerController) UpdateTagManager(ctx *gin.Context) {
 		return
 	}
 
-	utils.LogPrintln("UpdateTagManager", fmt.Sprintf("Attempt to update tag manager with mac %d.", mac))
+	log.Error(fmt.Sprintf("Attempt to update tag manager with mac %d.", mac))
 	jsonReq.Mac = mac
 	jsonReq, err := c.Repository.UpdateTagManager(jsonReq)
 	if err != nil {

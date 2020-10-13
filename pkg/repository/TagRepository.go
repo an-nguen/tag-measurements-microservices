@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
+
 	"tag-measurements-microservices/pkg/models"
 )
 
@@ -31,7 +32,8 @@ func (tr TagRepository) GetTagsByTemperatureZone(id string) ([]models.Tag, error
 	if err := tr.DataSource.Preload("Tags").First(&temperatureZone, id).Error; err != nil {
 		return nil, err
 	}
-	tr.DataSource.Model(&temperatureZone).Related(&tags, "Tags")
+	tr.DataSource.Preload("Tags").Model(&temperatureZone)
+	tags = temperatureZone.Tags
 
 	return tags, nil
 }

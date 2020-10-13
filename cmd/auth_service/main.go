@@ -22,13 +22,13 @@ var authController = controllers.AuthController{UserRepo: repository.UserReposit
 	Secret: appConfig.HmacSecret}
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AddAllowHeaders("authorization")
 	corsConfig.AddExposeHeaders("authorization")
 	corsConfig.AllowOrigins = []string{appConfig.AllowOrigin}
 	router.Use(cors.New(corsConfig))
-	defer db.Close()
 
 	auth := router.Group("/auth")
 	{

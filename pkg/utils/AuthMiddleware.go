@@ -8,7 +8,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 
 	"tag-measurements-microservices/pkg/models"
 )
@@ -96,11 +96,11 @@ func (c JWTAuthMiddleware) NewWithRole(role string) gin.HandlerFunc {
 		}
 
 		var user models.User
-		if c.UserDB.
+		if err := c.UserDB.
 			Where("id = ?", id).
 			Preload("Roles").
 			First(&user).
-			RecordNotFound() {
+			Error; err != nil {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "can't find user"})
 			ctx.Abort()
 			return

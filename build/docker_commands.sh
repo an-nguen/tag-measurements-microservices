@@ -16,8 +16,8 @@ docker build -t auth_service -f build/AuthServiceProd.Dockerfile .
 docker build -t auth_service -f build/AuthServiceProd.Dockerfile .
 docker build -t tgbot_service -f build/TgBotServiceProd.Dockerfile .
 docker build -t tgbot_service -f build/TgBotServiceProd.Dockerfile .
-cd "$(dirname "$0")"/../web/tag-measurements-web-ng/
-./build_save.sh
+#cd "$(dirname "$0")"/../web/tag-measurements-web-ng/
+#./build_save.sh
 
 echo 'How to run fetch_service: docker run -it --add-host=database:172.17.0.1 --name fetch_service -d fetch_service'
 echo 'How to run clean_service: docker run -it --add-host=database:172.17.0.1 --name clean_service -d clean_service'

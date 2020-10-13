@@ -8,6 +8,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 
 	"tag-measurements-microservices/pkg/repository"
 	"tag-measurements-microservices/pkg/utils"
@@ -32,7 +33,7 @@ func (c AuthController) AuthUser(ctx *gin.Context) {
 
 	token, user, err := c.UserRepo.AuthUser(userReq.Username, userReq.Password, c.Secret)
 	if err != nil {
-		utils.LogError("AuthUser", err)
+		log.Error(err)
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}

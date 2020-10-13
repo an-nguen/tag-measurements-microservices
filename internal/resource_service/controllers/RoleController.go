@@ -51,10 +51,10 @@ func (c RoleController) GetRolesByToken(ctx *gin.Context) {
 	}
 
 	var user models.User
-	if c.Repository.DataSource.
+	if err := c.Repository.DataSource.
 		Preload("Roles").
 		Where("id = ?", id).
-		First(&user).RecordNotFound() {
+		First(&user).Error; err != nil {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "no user"})
 		return
 	}

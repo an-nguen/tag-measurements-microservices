@@ -2,10 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"tag-measurements-microservices/pkg"
-	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/gzip"
@@ -13,6 +9,7 @@ import (
 
 	"tag-measurements-microservices/internal/resource_service/controllers"
 	structures "tag-measurements-microservices/internal/resource_service/structures"
+	"tag-measurements-microservices/pkg"
 	"tag-measurements-microservices/pkg/datasource"
 	"tag-measurements-microservices/pkg/repository"
 	"tag-measurements-microservices/pkg/utils"
@@ -51,14 +48,7 @@ var privilegeController = controllers.PrivilegeController{
 }
 
 func main() {
-	if tz := os.Getenv("TZ"); tz != "" {
-		var err error
-		time.Local, err = time.LoadLocation(tz)
-		if err != nil {
-			log.Printf("error loading location '%s': %v\n", tz, err)
-		}
-	}
-
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 	authMiddleware := &utils.JWTAuthMiddleware{
 		Secret: appConfig.HmacSecret,
@@ -71,15 +61,17 @@ func main() {
 	corsConfig.AllowOrigins = []string{appConfig.AllowOrigin}
 	router.Use(cors.New(corsConfig))
 
-	defer db.Close()
-	db.DB().SetMaxOpenConns(90)
-
-	api := router.Group("/api")
-	api.Use(authMiddleware.New())
-
 	tagController.ProxyService = new(pkg.ProxyService)
 	tagController.ProxyService.CreateProxyService(appConfig)
 	tagController.ProxyService.Start()
+
+	api := router.Group("/api")
+	ws := router.Group("/ws")
+	tagsWS := ws.Group("/tags")
+	{
+		tagsWS.GET("", tagController.GetLatestTagDetails)
+	}
+	api.Use(authMiddleware.New())
 
 	tagManagersAPI := api.Group("/tagManagers")
 	{
@@ -91,7 +83,6 @@ func main() {
 	{
 		tagsAPI.GET("", tagController.GetTags)
 		tagsAPI.PUT("/:id", tagController.UpdateTag)
-		tagsAPI.GET("/latest", tagController.GetLatestTagDetails)
 	}
 	measurementAPI := api.Group("/measurements")
 	{

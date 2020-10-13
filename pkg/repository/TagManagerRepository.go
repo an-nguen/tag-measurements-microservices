@@ -1,7 +1,9 @@
 package repository
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
+
+	"tag-measurements-microservices/internal/fetch_service/api"
 	"tag-measurements-microservices/pkg/models"
 )
 
@@ -37,7 +39,7 @@ func (r TagManagerRepository) UpdateTagManager(manager models.TagManager) (model
 
 func (r TagManagerRepository) GetTagManagerByMac(mac string) (models.TagManager, error) {
 	var manager models.TagManager
-	if err := r.DataSource.First(&manager, "mac = $1", mac).Error; err != nil {
+	if err := r.DataSource.First(&manager, "mac::varchar = ?", api.GetMacWithSemicolons(mac)).Error; err != nil {
 		return models.TagManager{}, err
 	}
 

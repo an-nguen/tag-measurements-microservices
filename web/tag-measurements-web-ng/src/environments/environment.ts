@@ -4,6 +4,7 @@
 
 export const environment = {
   production: false,
+  ws: 'localhost:10100',
   gateway: 'http://localhost:10100',
   auth_gateway: 'http://localhost:10120',
 };

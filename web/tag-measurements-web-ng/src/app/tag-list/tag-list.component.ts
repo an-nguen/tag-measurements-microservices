@@ -8,11 +8,10 @@ import {Tag} from "../_domains/tag";
 import {MatInput} from "@angular/material/input";
 import {PlotService} from "../_services/plot.service";
 import {EditTagDialogComponent} from "../edit-tag-dialog/edit-tag-dialog.component";
-import {interval} from "rxjs";
-import {flatMap} from "rxjs/operators";
 import * as moment from 'moment';
 import {FormControl} from "@angular/forms";
 import {RoleService} from "../_services/role.service";
+import {environment} from "../../environments/environment";
 
 @Component({
   selector: 'app-tag-manager-list',
@@ -23,7 +22,8 @@ export class TagListComponent implements OnInit {
   @ViewChild(MatSort, {static: false}) sort: MatSort;
   @ViewChild(MatInput, {static: false}) filterTextField: MatInput;
   public dataSource: MatTableDataSource<Tag>;
-  public displayedColumns = ['name', 'tagNumber', 'uuid', 'verification_date', 'temperature', 'humidity', 'voltage', 'batteryRemaining', 'signaldBm', 'actions'];
+  public displayedColumns = ['name', 'tagNumber', 'uuid', 'verification_date', 'temperature', 'cap', 'batteryVolt', 'batteryRemaining', 'signaldBm', 'actions'];
+  private websocketMessage: string;
 
   constructor(public tagManagerListService: TagManagerListService,
               public plotService: PlotService,
@@ -35,13 +35,18 @@ export class TagListComponent implements OnInit {
   warehouseGroupControl = new FormControl();
 
   ngOnInit(): void {
-    interval(1000*10)
-      .pipe(
-        flatMap(() => this.updateTagsDetails())
-      )
-      .subscribe(data => {
-
-      });
+    const conn = new WebSocket(`ws://${environment.ws}/ws/tags`);
+    conn.onopen = () => {
+      setInterval(() => {
+        conn.send("/latest");
+      }, 5000)
+    };
+    conn.onmessage = (msg) => {
+      if (msg.data) {
+        this.websocketMessage = msg.data;
+        this.updateTagsDetails(msg.data);
+      }
+    }
     this.tagManagerListService.refreshTemperatureZones();
     this.roleService.getRoleByToken();
   }
@@ -53,7 +58,8 @@ export class TagListComponent implements OnInit {
         this.dataSource = new MatTableDataSource<Tag>(this.tagManagerListService.tags);
         this.dataSource.sort = this.sort;
         this.isLoadingWG = false;
-        this.updateTagsDetails();
+        if (this.websocketMessage)
+          this.updateTagsDetails(this.websocketMessage);
       });
     this.plotService.tagSelection.clear();
   }
@@ -106,28 +112,25 @@ export class TagListComponent implements OnInit {
     });
   }
 
-  private updateTagsDetails() {
-    if (!this.dataSource) {
-      return [];
-    }
+  private updateTagsDetails(websocketMessage: string) {
+    if (!this.dataSource) return;
 
-    this.tagManagerListService.getLatestMeasurement().subscribe((res: any[]) => {
+    if (websocketMessage) {
+      const res = JSON.parse(websocketMessage);
       for (let tag of this.dataSource.data) {
         let found = res.find(t => t.uuid === tag.uuid);
         if (!!found) {
-          tag.cap = found.cap;
-          tag.batteryVolt = found.batteryVolt;
+          tag.cap = parseFloat(found.cap.toFixed(1));
+          tag.batteryVolt = parseFloat(found.batteryVolt.toFixed(2));
           tag.signaldBm = found.signaldBm;
           tag.batteryRemaining = found.batteryRemaining;
           tag.alive = found.alive;
-          tag.temperature = found.temperature;
+          tag.temperature = parseFloat(found.temperature.toFixed(4));
           tag.lux = found.lux;
         }
       }
       res.splice(0, res.length);
-    });
-
-    return this.dataSource.data;
+    }
   }
 
   printDate(element: Tag) {

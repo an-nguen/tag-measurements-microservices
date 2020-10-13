@@ -3,12 +3,14 @@ package controllers
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"strings"
-	"tag-measurements-microservices/pkg/models"
 	"time"
+
+	"github.com/gin-gonic/gin"
+
+	"tag-measurements-microservices/pkg/models"
 
 	"tag-measurements-microservices/pkg/repository"
 )
@@ -86,7 +88,7 @@ func (c MeasurementController) GetMeasurementsCSVByUUID(ctx *gin.Context) {
 		c.Repository.DataSource.Table("tag").Where("uuid = ?", uuid).First(&tag)
 		var measurementsTemp []models.Measurement
 		c.Repository.DataSource.Table("measurement").
-			Where("tag_uuid = ? and date BETWEEN ? AND ?", uuid, startDate, endDate).
+			Where("tag_uuid IN ? and date BETWEEN ? AND ?", uuid, startDate, endDate).
 			Order("date DESC").
 			Find(&measurementsTemp)
 		measurements[tag.Name] = measurementsTemp

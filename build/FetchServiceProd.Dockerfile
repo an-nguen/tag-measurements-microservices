@@ -1,7 +1,4 @@
-FROM golang:alpine AS builder
-
-RUN apk update && apk add --no-cache git
-RUN apk --no-cache add tzdata
+FROM golang:1.15.2 AS builder
 
 # Create appuser.
 ENV USER=appuser
@@ -29,14 +26,12 @@ RUN readlink -f fetch_service
 FROM scratch
 
 # Import the user and group files from the builder.
-COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 
 COPY --from=builder /go/src/fetch_service /go/src/fetch_service
 COPY --from=builder /go/src/configs/config_fetch.json.prod /go/src/configs/config_fetch.json
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-ENV TZ=Europe/Moscow
 WORKDIR /go/src/
 
 # Use an unprivileged user.

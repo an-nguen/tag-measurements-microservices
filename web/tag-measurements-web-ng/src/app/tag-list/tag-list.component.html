@@ -52,17 +52,17 @@
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Температура (C)</th>
           <td mat-cell *matCellDef="let element" [class.oversea-row]="!isBetweenTemperatureLimit(element)"
               [class.cell-value]="true">
-            {{ !element.temperature ? '-' : element.temperature.toFixed(4) }}</td>
+            {{ !element.temperature ? '-' : element.temperature }}</td>
         </ng-container>
-        <ng-container matColumnDef="humidity">
+        <ng-container matColumnDef="cap">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Влажность (%)</th>
           <td mat-cell *matCellDef="let element" [class.cell-value]="true">
-            {{ !element.cap ? '-' : element.cap.toFixed(1) }}</td>
+            {{ !element.cap ? '-' : element.cap }}</td>
         </ng-container>
-        <ng-container matColumnDef="voltage">
+        <ng-container matColumnDef="batteryVolt">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Напряжение (V)</th>
           <td mat-cell *matCellDef="let element" [class.cell-value]="true">
-            {{ !element.batteryVolt ? '-' : element.batteryVolt.toFixed(2) }}</td>
+            {{ !element.batteryVolt ? '-' : element.batteryVolt }}</td>
         </ng-container>
         <ng-container matColumnDef="batteryRemaining">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Заряд батареи (%)</th>

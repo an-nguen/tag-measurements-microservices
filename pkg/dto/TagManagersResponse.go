@@ -1,5 +1,7 @@
 package dto
 
+import "tag-measurements-microservices/pkg/models"
+
 type TagManagersResponse struct {
 	D []struct {
 		Type  string `json:"__type"`
@@ -30,4 +32,16 @@ type TagManagersResponse struct {
 		DBID       int    `json:"dbid"`
 		MStaticMAC string `json:"mStaticMac"`
 	} `json:"d"`
+}
+
+func (r TagManagersResponse) TagManagers(email string) []models.TagManager {
+	var tagManagers []models.TagManager
+	for _, cloudTagManager := range r.D {
+		var tm models.TagManager
+		tm.Mac = cloudTagManager.MAC
+		tm.Name = cloudTagManager.Name
+		tm.Email = email
+		tagManagers = append(tagManagers, tm)
+	}
+	return tagManagers
 }

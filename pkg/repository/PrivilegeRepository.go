@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"errors"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
+
 	"tag-measurements-microservices/pkg/models"
 )
 
@@ -20,15 +20,10 @@ func (r PrivilegeRepository) GetPrivileges() ([]models.Privilege, error) {
 }
 
 func (r PrivilegeRepository) CreatePrivilege(privilege models.Privilege) (models.Privilege, error) {
-	if r.DataSource.Where("name = ?", privilege.Name).First(&models.Privilege{}).RecordNotFound() {
-		if err := r.DataSource.Create(&privilege).Error; err != nil {
-			return models.Privilege{}, err
-		}
-
-		return privilege, nil
-	} else {
-		return models.Privilege{}, errors.New("name should be unique")
+	if err := r.DataSource.Create(&privilege).Error; err != nil {
+		return models.Privilege{}, err
 	}
+	return privilege, nil
 }
 
 func (r PrivilegeRepository) UpdatePrivilege(privilege models.Privilege) (models.Privilege, error) {

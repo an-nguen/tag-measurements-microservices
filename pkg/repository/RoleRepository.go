@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
+
 	"tag-measurements-microservices/pkg/models"
 )
 

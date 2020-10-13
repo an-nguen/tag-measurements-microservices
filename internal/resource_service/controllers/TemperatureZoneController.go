@@ -1,12 +1,14 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+
 	"tag-measurements-microservices/pkg/models"
 	"tag-measurements-microservices/pkg/repository"
-	"tag-measurements-microservices/pkg/utils"
 )
 
 type TemperatureZoneController struct {
@@ -16,7 +18,7 @@ type TemperatureZoneController struct {
 func (c TemperatureZoneController) GetTemperatureZones(ctx *gin.Context) {
 	groups, err := c.Repository.GetTemperatureZones()
 	if err != nil {
-		utils.LogError("GetTemperatureZones", err)
+		log.Error(err)
 		return
 	}
 	ctx.JSON(http.StatusOK, groups)

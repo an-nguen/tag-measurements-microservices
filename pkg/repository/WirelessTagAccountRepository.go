@@ -2,8 +2,8 @@ package repository
 
 import (
 	"errors"
-	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
+	"gorm.io/gorm"
 
 	"tag-measurements-microservices/pkg/models"
 )

@@ -1,10 +1,13 @@
 package pkg
 
 import (
-	"github.com/jinzhu/gorm"
-	"log"
 	"net/http"
 	"sync"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+
 	"tag-measurements-microservices/internal/fetch_service/api"
 	structures2 "tag-measurements-microservices/internal/notify_service/structures"
 	"tag-measurements-microservices/internal/resource_service/structures"
@@ -12,8 +15,6 @@ import (
 	"tag-measurements-microservices/pkg/dto"
 	"tag-measurements-microservices/pkg/models"
 	"tag-measurements-microservices/pkg/repository"
-	"tag-measurements-microservices/pkg/utils"
-	"time"
 )
 
 type TagDetail struct {
@@ -38,7 +39,7 @@ type TagDetail struct {
 type ProxyService struct {
 	Tags                []TagDetail
 	WirelessTagAccounts []models.WirelessTagAccount
-	WstClients          []api.WstClient
+	WstClients          []api.CloudClient
 	DataDb              *gorm.DB
 }
 
@@ -65,14 +66,14 @@ func (p *ProxyService) initWstClients() {
 			Password: acc.Password,
 		})
 		if err != nil {
-			utils.LogError("initWstClients", "Failed to get session id.")
+			log.Error("Failed to get session id.")
 			time.Sleep(3 * time.Minute)
 			p.initWstClients()
 			return
 		}
-		tagManagers, err := api.GetTagManagers(sessionId, "http://my.wirelesstag.net", tmpClient)
+		tagManagers, err := api.GetTagManagersApi(sessionId, "http://my.wirelesstag.net", tmpClient)
 		if err != nil {
-			utils.LogError("initWstClients", "Failed to get tag managers.")
+			log.Error("Failed to get tag managers.")
 			time.Sleep(3 * time.Minute)
 			p.initWstClients()
 			return
@@ -80,19 +81,18 @@ func (p *ProxyService) initWstClients() {
 		repo := repository.TagManagerRepository{DataSource: p.DataDb}
 
 		for _, tm := range tagManagers {
-			wstClient := api.WstClient{
-				Client:    &http.Client{},
-				HostUrl:   "http://my.wirelesstag.net",
-				SessionId: "WTAG=" + sessionId,
-				Email:     acc.Email,
-				Password:  acc.Password,
+			wstClient := api.CloudClient{
+				Client:             &http.Client{},
+				HostUrl:            "http://my.wirelesstag.net",
+				SessionId:          "WTAG=" + sessionId,
+				WirelessTagAccount: acc,
 			}
 			dbTm, _ := repo.GetTagManagerByMac(tm.Mac)
 
 			wstClient.TagManager = dbTm
 			err = wstClient.SelectTagManager(tm.Mac)
 			if err != nil {
-				utils.LogError("initWstClients", "Failed to select tag manager.")
+				log.Error("Failed to select tag manager.")
 				time.Sleep(3 * time.Minute)
 				p.initWstClients()
 				return
@@ -114,7 +114,7 @@ func (p *ProxyService) Start() {
 
 			p.Tags = p.Tags[:0]
 			for _, client := range p.WstClients {
-				res, err := client.GetTagList()
+				res, err := client.GetTagListApi()
 				if err != nil {
 					log.Println(err)
 				}

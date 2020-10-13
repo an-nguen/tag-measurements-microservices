@@ -3,105 +3,29 @@ package ru.tagmeasurements.fetch_service.models;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.tagmeasurements.fetch_service.repositories.MeasurementRepository;
-import ru.tagmeasurements.fetch_service.repositories.TagManagerRepository;
-import ru.tagmeasurements.fetch_service.repositories.TagRepository;
-import ru.tagmeasurements.fetch_service.services.ApiWrapperService;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Data
 public class CloudHttpClient {
-    private static final Logger log = LoggerFactory.getLogger(CloudHttpClient.class);
-    private String sessionId;
-    private WirelessTagAccount account;
-    private ApiWrapperService service;
-    private List<TagManager> tagManagerList;
-    private List<Tag> tagList;
-    private List<Measurement> measurements;
-    private final String[] types = {
-            "temperature", "cap", "batteryVolt", "signal"
-    };
-    public CloudHttpClient(WirelessTagAccount account, ApiWrapperService apiWrapperService) {
-        this.account = account;
-        this.service = apiWrapperService;
-    }
-    public void init() {
-        this.measurements = new LinkedList<>();
-        try {
-            this.sessionId = service.getSessionId(account);
-            this.tagManagerList = service.getTagManagers(sessionId, account);
-            this.tagList = service.getTags(sessionId, this.tagManagerList);
-            for (var type: types) {
-                var measurements = service.getMeasurements(this.tagManagerList, type);
-                if (measurements != null) {
-                    if (measurements.size() > 0) {
-                        this.measurements.addAll(measurements);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.error(e.getLocalizedMessage());
-        }
-    }
-    public void store(TagManagerRepository tagManagerRepository, TagRepository tagRepository, MeasurementRepository measurementRepository) {
-        var tagManagers = tagManagerRepository.findAllByEmail(account.getEmail());
-        this.tagManagerList.removeAll(tagManagers);
-        if (this.tagManagerList.size() > 0) {
-            tagManagerRepository.saveAll(this.tagManagerList);
-        }
-        var tagList = new ArrayList<Tag>();
-        for (var tm: tagManagers) {
-            var tempTags = tagRepository.findAll()
-                    .stream()
-                    .filter(tag -> tag.getMac().equals(tm.getMac())).collect(Collectors.toList());
-            if (!tempTags.isEmpty()) {
-                tagList.addAll(tempTags);
-            }
-        }
-        this.tagList.removeAll(tagList);
-        tagList.forEach(tag -> {
-            var found = tagRepository.findById(tag.getUuid());
-            found.ifPresentOrElse(t -> {
-                tag.setVerificationDate(t.getVerificationDate());
-            }, () -> {
-                tag.setVerificationDate(LocalDate.now());
-            });
-        });
-        if (this.tagList.size() > 0) {
-            tagRepository.saveAll(this.tagList);
-        }
-        if (this.measurements == null)  return;
-        var measurementList = measurementRepository
-                .getAllByDateInAndTagUUIDInOrderByDateDesc(
-                        this.measurements.stream().map(Measurement::getDate).collect(Collectors.toSet()),
-                        this.measurements.stream().map(Measurement::getTagUUID).collect(Collectors.toSet()));
-        for (var measurement: this.measurements) {
-            var databaseMeasurement = measurementList.stream()
-                    .filter(m -> m.getDate().equals(measurement.getDate())
-                            && m.getTagUUID().equals(measurement.getTagUUID())).findFirst();
-            databaseMeasurement.ifPresentOrElse(dm -> {
-                if (measurement.getTemperature() != null && measurement.getTemperature() > 0)
-                    dm.setTemperature(measurement.getTemperature());
+  private static final Logger log = LoggerFactory.getLogger(CloudHttpClient.class);
+  private String sessionId;
+  private WirelessTagAccount account;
+  private List<TagManager> tagManagerList;
+  private List<Tag> tagList;
+  private List<Measurement> measurements;
 
-                if (measurement.getHumidity() != null && measurement.getHumidity() > 0)
-                    dm.setHumidity(measurement.getHumidity());
+  public CloudHttpClient(WirelessTagAccount account) {
+    this.account = account;
+  }
 
-                if (measurement.getVoltage() != null && measurement.getVoltage() > 0)
-                    dm.setVoltage(measurement.getVoltage());
 
-                if (measurement.getSignal() != null && measurement.getSignal() > 0)
-                    dm.setSignal(measurement.getSignal());
+  public List<TagManager> getTagManagerList() {
+    return tagManagerList;
+  }
 
-                measurementRepository.save(dm);
-            }, () -> {
-                measurementRepository.save(measurement);
-            });
-        }
-    }
+  public void setTagManagerList(List<TagManager> tagManagerList) {
+    this.tagManagerList = tagManagerList;
+  }
 }
