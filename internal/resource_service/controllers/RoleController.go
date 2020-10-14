@@ -53,6 +53,7 @@ func (c RoleController) GetRolesByToken(ctx *gin.Context) {
 	var user models.User
 	if err := c.Repository.DataSource.
 		Preload("Roles").
+		Preload("Roles.Privileges").
 		Where("id = ?", id).
 		First(&user).Error; err != nil {
 		ctx.JSON(http.StatusForbidden, gin.H{"error": "no user"})
@@ -65,6 +66,23 @@ func (c RoleController) GetRolesByToken(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"roles": user.Roles})
+}
+
+func (c RoleController) GetRole(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	role, err := c.Repository.GetRole(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, role)
 }
 
 func (c RoleController) GetRoles(ctx *gin.Context) {

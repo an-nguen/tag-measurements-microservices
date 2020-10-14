@@ -73,6 +73,7 @@ export class AdminSettingsComponent implements OnInit {
   }
 
   editUser(user: User) {
+    console.log(user);
     this.dialog.open(EditUserDialogComponent, {
       width: '640px',
       data: {

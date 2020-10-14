@@ -3,7 +3,8 @@ import {Role} from "../_domains/role";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {RoleService} from "../_services/role.service";
-import {User} from "../_domains/user";
+import {Privilege} from "../_domains/privilege";
+import {PrivilegeService} from "../_services/privilege.service";
 
 interface RoleDialogData {
   role: Role;
@@ -17,15 +18,27 @@ interface RoleDialogData {
 })
 export class EditRoleDialogComponent implements OnInit {
   nameValue: string = '';
-  privilegeRoleList: Role[] = [];
+  selectedPrivileges: Privilege[];
+  onSelectPrivilegeChange(event: any) {
+    console.log(event)
+  }
 
   constructor(public dialogRef: MatDialogRef<EditRoleDialogComponent>,
               public roleService: RoleService,
+              public privilegeService: PrivilegeService,
               private snackBar: MatSnackBar,
               @Inject(MAT_DIALOG_DATA) public data: RoleDialogData) { }
 
   ngOnInit(): void {
     this.nameValue = this.data.role.name;
+    this.selectedPrivileges = this.privilegeService.privileges.filter(privilege => {
+      for (let p of this.data.role.privileges) {
+        if (p.id === privilege.id) {
+          return true
+        }
+      }
+      return false;
+    });
   }
 
   createRole() {
@@ -49,6 +62,7 @@ export class EditRoleDialogComponent implements OnInit {
   editRole() {
     const role = {...this.data.role};
     role.name = this.nameValue;
+    role.privileges = this.selectedPrivileges;
     this.roleService.updateRole(role)
       .subscribe((resp: Role) => {
         this.snackBar.open(`Роль ${resp.name} обновлена.`, 'Закрыть', {

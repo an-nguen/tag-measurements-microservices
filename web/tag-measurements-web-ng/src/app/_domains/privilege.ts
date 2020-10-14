@@ -1,6 +1,6 @@
 import {Role} from "./role";
 
-export interface Privilege {
+export class Privilege {
   id?: number;
   name: string;
   value: string;

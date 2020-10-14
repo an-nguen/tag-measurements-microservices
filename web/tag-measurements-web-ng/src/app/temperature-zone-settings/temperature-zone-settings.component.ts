@@ -86,6 +86,7 @@ export class TemperatureZoneSettings implements OnInit {
     dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.selectedTags = result.selectedTags;
+        console.log(result)
       }
     });
   }

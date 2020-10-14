@@ -19,9 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,68 +41,109 @@ public class MeasurementService {
 
 
   public void storeMeasurements(List<TagManager> tagManagers, String[] types) {
-    var result = new LinkedList<Measurement>();
+    var result = new HashMap<LocalDateTime, List<Measurement>>();
     for (var type: types) {
       for (var tm : tagManagers) {
         var cloudTags = tagService.getTags(tm).stream()
           .sorted(Comparator.comparingLong(Tag::getSlaveId))
           .collect(Collectors.toList());
-        var tags = cloudTags.stream()
+        var tagSlaveIds = cloudTags.stream()
           .map(Tag::getSlaveId)
           .collect(Collectors.toList());
         var request = new GetMultiTagStatsRawRequest();
-        try {
-          request.setIds(tags);
-          request.setFromDate(LocalDate.now().minus(75, ChronoUnit.DAYS));
-          request.setToDate(LocalDate.now());
-          request.setType(type);
-          var response = getMeasurements(tm, request);
-
-          for (var stat : response.getStats()) {
-            var date = LocalDate.parse(stat.getDate(), DateTimeFormatter.ofPattern("M/d/yyyy"));
-            for (int i = 0; i < cloudTags.size(); i++) {
-              int finalI = i;
-              for (var j = 0; j < stat.values.get(finalI).size(); j++) {
-                var dateTime = LocalDateTime
-                  .parse(date.format(DateTimeFormatter.ISO_DATE) + "T00:00:00")
-                  .plus(stat.tods.get(finalI).get(j), ChronoUnit.SECONDS);
-                var foundMeasurement = result.stream()
-                  .filter(m -> m.getDate().equals(dateTime) && m.getTagUUID()
-                    .equals(cloudTags.get(finalI).getUuid()))
-                  .findFirst();
-                int finalJ = j;
-                foundMeasurement.ifPresentOrElse(measurement -> {
-                  int n = result.indexOf(measurement);
-                  if (n == -1) {
-                    return;
-                  }
-                  fillMeasurement(type, stat, finalI, finalJ, measurement);
-                  var databaseMeasurement = repository
-                    .getFirstByDateAndTagUUIDOrderByDateDesc(dateTime, cloudTags.get(finalI).getUuid());
-                  if (databaseMeasurement != null) {
-                    measurement.setId(databaseMeasurement.getId());
-                  }
-                  result.set(n, measurement);
-                }, () -> {
-                  var measurement = new Measurement();
-                  measurement
-                    .setDate(dateTime);
-                  fillMeasurement(type, stat, finalI, finalJ, measurement);
-                  measurement.setTagUUID(cloudTags.get(finalI).getUuid());
-                  result.add(measurement);
-                });
-              }
+        // Fetch measurement of one tag
+        for (var tagSlaveId: tagSlaveIds) {
+          try {
+            var optionalCloudTag = cloudTags.stream().filter(ct -> ct.getSlaveId().equals(tagSlaveId)).findFirst();
+            if(optionalCloudTag.isPresent()) {
+              var cloudTag = optionalCloudTag.get();
+              // Send request
+              request.setIds(Collections.singletonList(tagSlaveId));
+              // Latest added record by uuid
+              var latestRecord = repository.getFirstByTagUUIDOrderByDateDesc(cloudTag.getUuid());
+              var fromDate = (latestRecord != null)
+                ? latestRecord.getDate()
+                : LocalDateTime.now().minus(75, ChronoUnit.DAYS);
+              request.setFromDate(fromDate.toLocalDate());
+              request.setToDate(LocalDate.now());
+              request.setType(type);
+              var response = getMeasurements(tm, request);
+              // Handle request
+              handleResponse(response, type, cloudTag, result);
+            } else {
+              log.info("can't find cloud tag by slave id");
             }
+          } catch (Exception e) {
+            log.error(e.getLocalizedMessage());
           }
-        } catch (Exception e) {
-          log.error(e.getLocalizedMessage());
         }
       }
     }
+    // Store to database
     if (result.size() > 0) {
-      repository.saveAll(result);
-      log.info(String.format("The %d measurements stored.", result.size()));
+      int count = 0;
+      for (var set: result.entrySet()) {
+        repository.saveAll(set.getValue());
+        count++;
+      }
+      log.info(String.format("The %d measurements stored.", count));
     }
+  }
+
+  private void handleResponse(MultiTagStatsRawResponse response, String type, Tag cloudTag, HashMap<LocalDateTime, List<Measurement>> result) {
+    for (var stat : response.getStats()) {
+      // Offset date
+      var date = LocalDate.parse(stat.getDate(), DateTimeFormatter.ofPattern("M/d/yyyy"));
+      // Iterate through values/tods
+      for (var j = 0; j < stat.values.get(0).size(); j++) {
+        // Set date time record
+        var dateTime = LocalDateTime
+          .parse(date.format(DateTimeFormatter.ISO_DATE) + "T00:00:00")
+          .plus(stat.tods.get(0).get(j), ChronoUnit.SECONDS);
+        // Attempt to find similar record by date and uuid in result collection
+        if (result.containsKey(dateTime)) {
+          var list = result.get(dateTime);
+          var optionalMeasurement = list.stream()
+            .filter(measurement -> measurement.getTagUUID().equals(cloudTag.getUuid()))
+            .findFirst();
+          int finalJ = j;
+          optionalMeasurement.ifPresentOrElse(measurement -> {
+            // Update record
+            int n = list.indexOf(measurement);
+            if (n == -1) {
+              return;
+            }
+            fillMeasurement(type, stat, finalJ, measurement);
+            var databaseMeasurement = repository
+              .getFirstByDateAndTagUUIDOrderByDateDesc(dateTime, cloudTag.getUuid());
+            if (databaseMeasurement != null) {
+              measurement.setId(databaseMeasurement.getId());
+            }
+            list.set(n, measurement);
+          }, () -> {
+            // New one record
+            addNewMeasurement(type, cloudTag, stat, finalJ, dateTime, list);
+          });
+        } else {
+          result.put(dateTime, new LinkedList<>());
+          var list = result.get(dateTime);
+          addNewMeasurement(type, cloudTag, stat, j, dateTime, list);
+        }
+      }
+    }
+  }
+
+  private void addNewMeasurement(String type, Tag cloudTag, MultiTagStats stat, int j, LocalDateTime dateTime, List<Measurement> list) {
+    var measurement = new Measurement();
+    measurement
+      .setDate(dateTime);
+    fillMeasurement(type, stat, j, measurement);
+    var databaseMeasurement = repository
+      .getFirstByDateAndTagUUIDOrderByDateDesc(dateTime, cloudTag.getUuid());
+    if (databaseMeasurement != null)
+      measurement.setId(databaseMeasurement.getId());
+    measurement.setTagUUID(cloudTag.getUuid());
+    list.add(measurement);
   }
 
   private MultiTagStatsRawResponse getMeasurements(TagManager tm, GetMultiTagStatsRawRequest request) throws Exception {
@@ -118,12 +157,12 @@ public class MeasurementService {
 
   }
 
-  private void fillMeasurement(String type, MultiTagStats stat, int i, int j, Measurement measurement) {
+  private void fillMeasurement(String type, MultiTagStats stat, int j, Measurement measurement) {
     switch (type) {
-      case "temperature" -> measurement.setTemperature(stat.values.get(i).get(j));
-      case "cap" -> measurement.setHumidity(stat.values.get(i).get(j));
-      case "batteryVolt" -> measurement.setVoltage(stat.values.get(i).get(j));
-      case "signal" -> measurement.setSignal(stat.values.get(i).get(j));
+      case "temperature" -> measurement.setTemperature(stat.values.get(0).get(j));
+      case "cap" -> measurement.setHumidity(stat.values.get(0).get(j));
+      case "batteryVolt" -> measurement.setVoltage(stat.values.get(0).get(j));
+      case "signal" -> measurement.setSignal(stat.values.get(0).get(j));
     }
   }
 }

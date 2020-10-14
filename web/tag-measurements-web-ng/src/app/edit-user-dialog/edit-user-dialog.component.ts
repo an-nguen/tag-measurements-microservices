@@ -19,7 +19,7 @@ interface UserDialogData {
 export class EditUserDialogComponent implements OnInit {
   usernameValue: string = '';
   passwordValue: string = '';
-  selectedRoles: Role[] = [];
+  selectedRoles: Role[];
 
   constructor(public dialogRef: MatDialogRef<EditUserDialogComponent>,
               public userService: UserService,
@@ -28,10 +28,14 @@ export class EditUserDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: UserDialogData) { }
 
   ngOnInit(): void {
-    if (this.data.user && this.data.user.username)
-      this.usernameValue = this.data.user.username;
-    if (this.data.user && this.data.user.roles)
-      this.selectedRoles = this.data.user.roles;
+    this.usernameValue = this.data.user.username;
+    this.selectedRoles = this.roleService.roles.filter(role => {
+      for (let r of this.data.user.roles) {
+        if (r.id === role.id)
+          return true;
+      }
+      return false;
+    });
   }
 
   editUser() {

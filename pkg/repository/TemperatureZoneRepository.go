@@ -2,7 +2,6 @@ package repository
 
 import (
 	"errors"
-
 	"gorm.io/gorm"
 
 	"tag-measurements-microservices/pkg/models"
@@ -33,22 +32,23 @@ func (r WarehouseGroupRepository) CreateTemperatureZone(group models.Temperature
 
 func (r WarehouseGroupRepository) UpdateTemperatureZone(group models.TemperatureZone) (models.TemperatureZone, error) {
 	var groupDb models.TemperatureZone
-	r.DataSource.Preload("Tags").First(&groupDb, "id = ?", group.ID)
-	groupDb.Name = group.Name
-	groupDb.Description = group.Description
-	groupDb.LowerTempLimit = group.LowerTempLimit
-	groupDb.HigherTempLimit = group.HigherTempLimit
-	groupDb.NotifyEmails = group.NotifyEmails
-	groupDb.Tags = group.Tags
-	r.DataSource.Save(&groupDb)
-	r.DataSource.Model(&groupDb).Association("Tags").Replace(group.Tags)
+	r.DataSource.First(&groupDb, "id = ?", group.ID)
+	r.DataSource.Model(&groupDb).Updates(models.TemperatureZone{
+		Name:            group.Name,
+		Description:     group.Description,
+		LowerTempLimit:  group.LowerTempLimit,
+		HigherTempLimit: group.HigherTempLimit,
+		NotifyEmails:    group.NotifyEmails,
+	})
+	r.DataSource.Model(&groupDb).Association("Tags").Clear()
+	r.DataSource.Model(&groupDb).Association("Tags").Replace(&group.Tags)
 
 	return group, nil
 }
 
 func (r WarehouseGroupRepository) GetWarehouseGroup(id string) (models.TemperatureZone, error) {
 	var group models.TemperatureZone
-	if err := r.DataSource.Preload("Tags").Where("id = ?", id).First(&group).Error; err != nil {
+	if err := r.DataSource.Where("id = ?", id).Preload("Tags").First(&group).Error; err != nil {
 		return group, err
 	}
 	return group, nil

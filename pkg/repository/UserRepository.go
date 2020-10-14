@@ -36,6 +36,7 @@ func (repo UserRepository) CreateUser(user models.User) (models.User, error) {
 	if err := repo.DataSource.Create(&user).Error; err != nil {
 		return models.User{}, err
 	}
+	repo.DataSource.Preload("Roles").First(&user)
 	user.Password = ""
 
 	return user, nil
@@ -52,7 +53,7 @@ func (repo UserRepository) hashPassword(user models.User) ([]byte, error) {
 func (repo UserRepository) AuthUser(username string, password string, secret string) (string, models.User, error) {
 	var user models.User
 
-	if err := repo.DataSource.Find(&user, "username = $1", username).Error; err != nil {
+	if err := repo.DataSource.Find(&user, "username = ?", username).Error; err != nil {
 		return "", models.User{}, err
 	}
 
@@ -86,7 +87,7 @@ func (repo UserRepository) AuthUser(username string, password string, secret str
 func (repo UserRepository) UpdateUser(user models.User) (models.User, error) {
 	var databaseUser models.User
 
-	if err := repo.DataSource.Find(&databaseUser, "id = $1", user.ID).Error; err != nil {
+	if err := repo.DataSource.First(&databaseUser, "id = ?", user.ID).Error; err != nil {
 		return models.User{}, err
 	}
 
@@ -94,12 +95,13 @@ func (repo UserRepository) UpdateUser(user models.User) (models.User, error) {
 	if err != nil {
 		return models.User{}, err
 	}
-
-	databaseUser.Username = user.Username
-	databaseUser.Password = string(hashedPassword)
-	databaseUser.Roles = user.Roles
-	repo.DataSource.Save(&databaseUser)
+	repo.DataSource.Model(&databaseUser).Updates(models.User{
+		Username: user.Username,
+		Password: string(hashedPassword),
+	})
+	repo.DataSource.Model(&databaseUser).Association("Roles").Clear()
 	repo.DataSource.Model(&databaseUser).Association("Roles").Replace(user.Roles)
+	repo.DataSource.Preload("Roles").First(&databaseUser, "id = ?", databaseUser.ID)
 
 	return databaseUser, nil
 }

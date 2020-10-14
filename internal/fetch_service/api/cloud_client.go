@@ -70,88 +70,86 @@ func (c *CloudClient) Store(db *gorm.DB) {
 	}
 }
 
-func (c *CloudClient) HandleResponse(json dto.MultiTagStatsRawResponse, tags []models.Tag, dataType types.MeasurementDataType) error {
+func (c *CloudClient) HandleResponse(json dto.MultiTagStatsRawResponse, uuid string, dataType types.MeasurementDataType) error {
 	start := time.Now()
 
-	for i, tag := range tags {
-		for _, obj := range json.D.Stats {
-			for j, tod := range obj.Tods[i] {
+	for _, obj := range json.D.Stats {
+		for j, tod := range obj.Tods[0] {
 
-				value := obj.Values[i][j]
-				date, err := time.Parse("1/2/2006", obj.Date)
-				if err != nil {
-					log.Error("storeMeasurement:handleResponse", "Failed to parse time ", err)
-					continue
-				}
-				date = date.Add(time.Second * time.Duration(tod))
-				if value == 0 {
-					continue
-				}
-				record := findMeasurement(date, tag.UUID, c.ModMeasurements)
+			value := obj.Values[0][j]
+			date, err := time.Parse("1/2/2006", obj.Date)
+			if err != nil {
+				log.Error("storeMeasurement:handleResponse", "Failed to parse time ", err)
+				continue
+			}
+			date = date.Add(time.Second * time.Duration(tod))
+			if value == 0 {
+				continue
+			}
+			record := findMeasurement(date, uuid, c.ModMeasurements)
+			if record == nil {
+				record = findMeasurement(date, uuid, c.NewMeasurements)
 				if record == nil {
-					record = findMeasurement(date, tag.UUID, c.NewMeasurements)
-					if record == nil {
-						var dbRecord models.Measurement
-						db := c.DataDB.Order("date desc").Where("date = ? and tag_uuid = ?", date, tag.UUID).First(&dbRecord)
-						if db.Error != nil {
-							record = nil
-						} else {
-							record = &dbRecord
-						}
+					var dbRecord models.Measurement
+					db := c.DataDB.Order("date desc").Where("date = ? and tag_uuid = ?", date, uuid).First(&dbRecord)
+					if db.Error != nil {
+						record = nil
+					} else {
+						record = &dbRecord
 					}
 				}
-				if record == nil {
-					switch dataType {
-					case types.Temperature:
-						c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
-							Date:        date,
-							Temperature: value,
-							TagUUID:     tag.UUID,
-						})
-					case types.Humidity:
-						c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
-							Date:     date,
-							Humidity: value,
-							TagUUID:  tag.UUID,
-						})
-					case types.Signal:
-						c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
-							Date:    date,
-							Signal:  value,
-							TagUUID: tag.UUID,
-						})
-					case types.BatteryVoltage:
-						c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
-							Date:    date,
-							Voltage: value,
-							TagUUID: tag.UUID,
-						})
-					}
-				} else {
-					switch dataType {
-					case types.Temperature:
-						if record.Temperature != value {
-							record.Temperature = value
-						}
-					case types.Humidity:
-						if record.Humidity != value {
-							record.Humidity = value
-						}
-					case types.BatteryVoltage:
-						if record.Voltage != value {
-							record.Voltage = value
-						}
-					case types.Signal:
-						if record.Signal != value {
-							record.Signal = value
-						}
-					default:
-						err = errors.New("unknown type")
-					}
+			}
+			if record == nil {
+				switch dataType {
+				case types.Temperature:
+					c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
+						Date:        date,
+						Temperature: value,
+						TagUUID:     uuid,
+					})
+				case types.Humidity:
+					c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
+						Date:     date,
+						Humidity: value,
+						TagUUID:  uuid,
+					})
+				case types.Signal:
+					c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
+						Date:    date,
+						Signal:  value,
+						TagUUID: uuid,
+					})
+				case types.BatteryVoltage:
+					c.NewMeasurements = append(c.NewMeasurements, models.Measurement{
+						Date:    date,
+						Voltage: value,
+						TagUUID: uuid,
+					})
 				}
-				if err != nil {
-					return err
+			} else {
+				switch dataType {
+				case types.Temperature:
+					if record.Temperature != value {
+						record.Temperature = value
+					}
+				case types.Humidity:
+					if record.Humidity != value {
+						record.Humidity = value
+					}
+				case types.BatteryVoltage:
+					if record.Voltage != value {
+						record.Voltage = value
+					}
+				case types.Signal:
+					if record.Signal != value {
+						record.Signal = value
+					}
+				default:
+					err = errors.New("unknown type")
 				}
+			}
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -213,23 +211,23 @@ func (c *CloudClient) GetMeasurements(dataType types.MeasurementDataType, n int)
 		log.Error("Unknown data type!")
 		return
 	}
-	var slaveIds []int
-	date := time.Now().Add(-(time.Duration(n) * (24 * time.Hour)))
-
 	for _, tag := range c.Tags {
+		var slaveIds []int
+		date := time.Now().Add(-(time.Duration(n) * (24 * time.Hour)))
+
 		slaveIds = append(slaveIds, tag.SlaveId)
-	}
 
-	if len(slaveIds) > 0 {
-		jsonResponse, err := c.GetMultiTagStatsRawApi(slaveIds, string(dataType), date, time.Now().Add(2*(24*time.Hour)))
-		if err != nil {
-			log.Error("failed to get raw stats -> fetch again next minute. error - ", err)
-			return
-		}
+		if len(slaveIds) > 0 {
+			jsonResponse, err := c.GetMultiTagStatsRawApi(slaveIds, string(dataType), date, time.Now().Add(2*(24*time.Hour)))
+			if err != nil {
+				log.Error("failed to get raw stats -> fetch again next minute. error - ", err)
+				return
+			}
 
-		if err := c.HandleResponse(jsonResponse, c.Tags, dataType); err != nil {
-			log.Error("Error: ", err.Error())
-			return
+			if err := c.HandleResponse(jsonResponse, tag.UUID, dataType); err != nil {
+				log.Error("Error: ", err.Error())
+				return
+			}
 		}
 	}
 }

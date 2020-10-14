@@ -11,6 +11,12 @@
     <mat-label>Название роли</mat-label>
     <input matInput type="text" [(ngModel)]="nameValue" name="usernameValue">
   </mat-form-field>
+  <mat-form-field class="full-width" appearance="outline">
+    <mat-label>Привилегии</mat-label>
+    <mat-select [(ngModel)]="selectedPrivileges" (ngModelChange)="onSelectPrivilegeChange($event)" multiple>
+      <mat-option *ngFor="let privilege of privilegeService.privileges" [value]="privilege">{{privilege.name}}</mat-option>
+    </mat-select>
+  </mat-form-field>
 </div>
 <div mat-dialog-actions>
   <button mat-flat-button type="button" color="primary" *ngIf="data.mode === 'edit'" (click)="editRole()"><mat-icon prefix>edit</mat-icon>Изменить</button>

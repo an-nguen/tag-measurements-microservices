@@ -55,7 +55,7 @@ func perpendicularDistanceMeasurement(pt models.Measurement, lineStart models.Me
 		dy = lineEnd.Temperature - lineStart.Temperature
 	} else if t == "humidity" {
 		dy = lineEnd.Humidity - lineStart.Humidity
-	} else if t == "voltage" {
+	} else if t == "batteryVolt" {
 		dy = lineEnd.Voltage - lineStart.Voltage
 	} else if t == "signal" {
 		dy = lineEnd.Signal - lineStart.Signal

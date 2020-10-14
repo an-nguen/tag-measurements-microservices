@@ -11,10 +11,11 @@ export class MeasurementService {
       private httpClient: HttpClient
   ) { }
 
-  getTemperatureDataByUUID(uuidList: string[], startDate: any, endDate: any, epsilon: number) {
+  getTemperatureDataByUUID(uuidList: string[], startDate: any, endDate: any, epsilon: number,
+                           dataType: string) {
     let params = new HttpParams();
     params = params.set("uuidList", uuidList.join(','));
-    params = params.set("startDate", startDate).set("endDate", endDate).set("epsilon", String(epsilon));;
+    params = params.set("startDate", startDate).set("endDate", endDate).set("epsilon", String(epsilon)).set("dataType", dataType);
     return this.httpClient.get<Measurement[]>(environment.gateway + '/api/measurements',
         {params: params}
     );

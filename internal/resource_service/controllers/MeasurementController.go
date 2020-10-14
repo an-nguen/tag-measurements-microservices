@@ -31,6 +31,15 @@ func (c MeasurementController) GetMeasurementsByUUID(ctx *gin.Context) {
 	startDateStr := ctx.Query("startDate")
 	endDateStr := ctx.Query("endDate")
 	epsilonStr := ctx.Query("epsilon")
+	dataTypeStr := ctx.Query("dataType")
+	if len(dataTypeStr) > 0 {
+		if !(dataTypeStr == "temperature" || dataTypeStr == "humidity" || dataTypeStr == "batteryVolt" || dataTypeStr == "signal") {
+			ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": errors.New("failed to parse URL queries").Error()})
+			return
+		}
+	} else {
+		dataTypeStr = ""
+	}
 
 	if len(uuidList) == 0 || len(startDateStr) == 0 || len(endDateStr) == 0 {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": errors.New("failed to parse URL queries").Error()})
@@ -53,7 +62,7 @@ func (c MeasurementController) GetMeasurementsByUUID(ctx *gin.Context) {
 		epsilon = 0.0
 	}
 
-	tagData, _ := c.Repository.GetMeasurementByUUIDs(uuidList, startDate, endDate, epsilon)
+	tagData, _ := c.Repository.GetMeasurementByUUIDs(uuidList, startDate, endDate, epsilon, dataTypeStr)
 	ctx.JSON(http.StatusOK, tagData)
 }
 
@@ -88,7 +97,7 @@ func (c MeasurementController) GetMeasurementsCSVByUUID(ctx *gin.Context) {
 		c.Repository.DataSource.Table("tag").Where("uuid = ?", uuid).First(&tag)
 		var measurementsTemp []models.Measurement
 		c.Repository.DataSource.Table("measurement").
-			Where("tag_uuid IN ? and date BETWEEN ? AND ?", uuid, startDate, endDate).
+			Where("tag_uuid = ? and date BETWEEN ? AND ?", uuid, startDate, endDate).
 			Order("date DESC").
 			Find(&measurementsTemp)
 		measurements[tag.Name] = measurementsTemp

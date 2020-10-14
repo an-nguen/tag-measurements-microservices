@@ -22,8 +22,9 @@ export class TagListComponent implements OnInit {
   @ViewChild(MatSort, {static: false}) sort: MatSort;
   @ViewChild(MatInput, {static: false}) filterTextField: MatInput;
   public dataSource: MatTableDataSource<Tag>;
-  public displayedColumns = ['name', 'tagNumber', 'uuid', 'verification_date', 'temperature', 'cap', 'batteryVolt', 'batteryRemaining', 'signaldBm', 'actions'];
+  public displayedColumns = ['name'];
   private websocketMessage: string;
+
 
   constructor(public tagManagerListService: TagManagerListService,
               public plotService: PlotService,
@@ -35,20 +36,53 @@ export class TagListComponent implements OnInit {
   warehouseGroupControl = new FormControl();
 
   ngOnInit(): void {
-    const conn = new WebSocket(`ws://${environment.ws}/ws/tags`);
-    conn.onopen = () => {
-      setInterval(() => {
-        conn.send("/latest");
-      }, 5000)
-    };
-    conn.onmessage = (msg) => {
-      if (msg.data) {
-        this.websocketMessage = msg.data;
-        this.updateTagsDetails(msg.data);
+
+    this.tagManagerListService.refreshTemperatureZones();
+    this.roleService.getRoleByToken().add(() => {
+      this.defineTableColumns();
+
+    });
+  }
+  // public displayedColumns = ['name', 'tagNumber', 'uuid', 'verification_date', 'temperature', 'cap', 'batteryVolt', 'batteryRemaining', 'signaldBm', 'actions'];
+
+  defineTableColumns() {
+    const privilegeNames = this.roleService.userPrivileges.map(privilege => privilege.name);
+
+    if (privilegeNames.includes('ALLOW_SHOW_TAG_NUMBER'))
+      this.displayedColumns.push('tagNumber')
+    if (privilegeNames.includes('ALLOW_SHOW_UUID'))
+      this.displayedColumns.push('uuid')
+    if (privilegeNames.includes('ALLOW_VERIFICATION_DATE'))
+      this.displayedColumns.push('verification_date')
+    if (privilegeNames.includes('ALLOW_SHOW_TEMPERATURE'))
+      this.displayedColumns.push('temperature')
+    if (privilegeNames.includes('ALLOW_SHOW_HUMIDITY'))
+      this.displayedColumns.push('cap')
+    if (privilegeNames.includes('ALLOW_SHOW_VOLTAGE'))
+      this.displayedColumns.push('batteryVolt')
+    if (privilegeNames.includes('ALLOW_SHOW_BATTERY_REMAINING'))
+      this.displayedColumns.push('batteryRemaining')
+    if (privilegeNames.includes('ALLOW_SHOW_SIGNAL'))
+      this.displayedColumns.push('signaldBm')
+    if (privilegeNames.includes('ALLOW_TAG_EDIT'))
+      this.displayedColumns.push('actions')
+
+    if (privilegeNames.includes('ALLOW_SHOW_TEMPERATURE') || privilegeNames.includes('ALLOW_SHOW_HUMIDITY')
+      || privilegeNames.includes('ALLOW_SHOW_VOLTAGE') || privilegeNames.includes('ALLOW_SHOW_BATTERY_REMAINING')
+    || privilegeNames.includes('ALLOW_SHOW_SIGNAL')) {
+      const conn = new WebSocket(`ws://${environment.ws}/ws/tags`);
+      conn.onopen = () => {
+        setInterval(() => {
+          conn.send("/latest");
+        }, 5000)
+      };
+      conn.onmessage = (msg) => {
+        if (msg.data) {
+          this.websocketMessage = msg.data;
+          this.updateTagsDetails(msg.data);
+        }
       }
     }
-    this.tagManagerListService.refreshTemperatureZones();
-    this.roleService.getRoleByToken();
   }
 
   onTemperatureZoneSelectChange(id: number) {

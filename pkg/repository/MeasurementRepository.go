@@ -28,7 +28,8 @@ func (repo MeasurementRepository) GetMeasurementByUUIDs(
 	uuidList []string,
 	startDate time.Time,
 	endDate time.Time,
-	epsilon float64) ([]models.Measurement, error) {
+	epsilon float64,
+	dataType string) ([]models.Measurement, error) {
 
 	var res []models.Measurement
 	if len(uuidList) == 0 || startDate.IsZero() || endDate.IsZero() {
@@ -41,7 +42,11 @@ func (repo MeasurementRepository) GetMeasurementByUUIDs(
 		log.Error(err)
 	}
 	if epsilon > 0.0 {
-		res = utils.DouglasPeuckerMeasurement(res, epsilon, "temperature")
+		if dataType == "" {
+			res = utils.DouglasPeuckerMeasurement(res, epsilon, "temperature")
+		} else {
+			res = utils.DouglasPeuckerMeasurement(res, epsilon, dataType)
+		}
 	}
 
 	return res, nil

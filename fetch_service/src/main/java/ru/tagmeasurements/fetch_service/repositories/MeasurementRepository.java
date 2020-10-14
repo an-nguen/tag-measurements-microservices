@@ -13,4 +13,5 @@ import java.util.UUID;
 @Repository
 public interface MeasurementRepository extends JpaRepository<Measurement, Long> {
     Measurement getFirstByDateAndTagUUIDOrderByDateDesc(LocalDateTime date, UUID tagUUID);
+    Measurement getFirstByTagUUIDOrderByDateDesc(UUID tagUUID);
 }

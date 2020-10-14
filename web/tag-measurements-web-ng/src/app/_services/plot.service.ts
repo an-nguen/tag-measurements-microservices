@@ -122,7 +122,8 @@ export class PlotService {
       this.measurementService.getTemperatureDataByUUID(uuidList,
         this.startDate.toISOString(),
         this.endDate.toISOString(),
-        epsilon)
+        epsilon,
+        dataType)
         .subscribe((response: Measurement[]) => {
           this.clearData();
           this.checkResponse(response, uuidList);

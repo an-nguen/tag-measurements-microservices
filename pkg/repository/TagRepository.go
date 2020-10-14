@@ -33,7 +33,9 @@ func (tr TagRepository) GetTagsByTemperatureZone(id string) ([]models.Tag, error
 		return nil, err
 	}
 	tr.DataSource.Preload("Tags").Model(&temperatureZone)
-	tags = temperatureZone.Tags
+	for _, tag := range temperatureZone.Tags {
+		tags = append(tags, *tag)
+	}
 
 	return tags, nil
 }

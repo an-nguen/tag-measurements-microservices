@@ -77,12 +77,14 @@ func main() {
 	{
 		tagManagersAPI.GET("", tagManagerController.GetTagManagers)
 		tagManagersAPI.GET("/:id", tagManagerController.GetTagManager)
-		tagManagersAPI.PUT("/:id", tagManagerController.UpdateTagManager)
+		tagManagersAPI.PUT("/:id", tagManagerController.UpdateTagManager).
+			Use(authMiddleware.NewWithRole("ADMIN"))
 	}
 	tagsAPI := api.Group("/tags")
 	{
 		tagsAPI.GET("", tagController.GetTags)
-		tagsAPI.PUT("/:id", tagController.UpdateTag)
+		tagsAPI.PUT("/:id", tagController.UpdateTag).
+			Use(authMiddleware.NewWithRole("ADMIN"))
 	}
 	measurementAPI := api.Group("/measurements")
 	{
@@ -94,14 +96,14 @@ func main() {
 		temperatureZoneAPI.GET("", temperatureZoneController.GetTemperatureZones)
 		temperatureZoneAPI.GET("/:id", temperatureZoneController.GetTemperatureZone)
 		temperatureZoneAPI.POST("", temperatureZoneController.CreateTemperatureZone).
-			Use(authMiddleware.NewWithRole("ADMIN"))
+			Use(authMiddleware.NewWithPrivileges("CRUD_TEMPERATURE_ZONE"))
 		temperatureZoneAPI.PUT("/:id", temperatureZoneController.UpdateTemperatureZone).
-			Use(authMiddleware.NewWithRole("ADMIN"))
+			Use(authMiddleware.NewWithPrivileges("CRUD_TEMPERATURE_ZONE"))
 		temperatureZoneAPI.DELETE("/:id", temperatureZoneController.DeleteTemperatureZone).
-			Use(authMiddleware.NewWithRole("ADMIN"))
+			Use(authMiddleware.NewWithPrivileges("CRUD_TEMPERATURE_ZONE"))
 	}
 	wstAccountsAPI := api.Group("/wstAccounts")
-	wstAccountsAPI.Use(authMiddleware.NewWithRole("ADMIN"))
+	wstAccountsAPI.Use(authMiddleware.NewWithPrivileges("CRUD_WST_ACCOUNTS"))
 	{
 		wstAccountsAPI.GET("", wirelessTagAccountController.GetAccounts)
 		wstAccountsAPI.POST("", wirelessTagAccountController.AddAccount)
@@ -109,7 +111,7 @@ func main() {
 		wstAccountsAPI.DELETE("/:id", wirelessTagAccountController.DeleteAccount)
 	}
 	userAPI := api.Group("/user")
-	userAPI.Use(authMiddleware.NewWithRole("ADMIN"))
+	userAPI.Use(authMiddleware.NewWithPrivileges("CRUD_USER"))
 	{
 		userAPI.GET("", userController.GetUsers)
 		userAPI.GET("/:id", userController.GetUser)
@@ -122,15 +124,16 @@ func main() {
 		rolesAPI.GET("/token", roleController.GetRolesByToken)
 	}
 	roleAPI := api.Group("/role")
-	roleAPI.Use(authMiddleware.NewWithRole("ADMIN"))
+	roleAPI.Use(authMiddleware.NewWithPrivileges("CRUD_ROLE"))
 	{
+		roleAPI.GET("/:id", roleController.GetRole)
 		roleAPI.GET("", roleController.GetRoles)
 		roleAPI.POST("", roleController.CreateRole)
 		roleAPI.PUT("/:id", roleController.UpdateRole)
 		roleAPI.DELETE("/:id", roleController.DeleteRole)
 	}
 	privilegeAPI := api.Group("/privilege")
-	privilegeAPI.Use(authMiddleware.NewWithRole("ADMIN"))
+	privilegeAPI.Use(authMiddleware.NewWithPrivileges("CRUD_PRIVILEGE"))
 	{
 		privilegeAPI.GET("", privilegeController.GetPrivileges)
 		privilegeAPI.POST("", privilegeController.CreatePrivilege)

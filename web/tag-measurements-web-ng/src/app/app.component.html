@@ -12,13 +12,13 @@
         Зоны
       </button>
     </ng-container>
-    <ng-container>
+    <ng-container *ngIf="roleService.userPrivilegesInclude('CRUD_TEMPERATURE_ZONE')">
       <button mat-flat-button color="primary" [routerLink]="['warehouse-settings']">
         <mat-icon>settings</mat-icon>
         Настройка зон
       </button>
     </ng-container>
-    <ng-container *ngIf="roleService.isAdmin()">
+    <ng-container *ngIf="roleService.userPrivilegesInclude('CRUD_WST_ACCOUNTS')">
       <button mat-flat-button color="primary" [routerLink]="['wst-accounts']">
         <mat-icon>people</mat-icon>
         WST аккаунты
@@ -26,7 +26,9 @@
     </ng-container>
   </ng-container>
   <span class="spacer"></span>
-  <ng-container *ngIf="roleService.isAdmin()">
+  <ng-container *ngIf="roleService.userPrivilegesInclude('CRUD_USER')
+   || roleService.userPrivilegesInclude('CRUD_ROLE')
+   || roleService.userPrivilegesInclude('CRUD_PRIVILEGE')">
     <button mat-flat-button color="primary" (click)="router.navigate(['admin-settings'])">
       <mat-icon>admin_panel_settings</mat-icon>
       Панель администратора
