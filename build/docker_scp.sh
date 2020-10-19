@@ -9,12 +9,12 @@ if [ -z "$PASSWORD" ];
 then
   echo "PASSWORD can't be empty"
 else
-  sshpass -p "$PASSWORD" scp -rv ~/auth_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
-  sshpass -p "$PASSWORD" scp -rv ~/fetch_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
-  sshpass -p "$PASSWORD" scp -rv ~/resource_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
-  sshpass -p "$PASSWORD" scp -rv ~/notify_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
-  sshpass -p "$PASSWORD" scp -rv ~/clean_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
-#  sshpass -p "$PASSWORD" scp -rv ~/tag_measurements_web_ng.tar $USERNAME@$REMOTE_IP:/mnt/datasource
-  sshpass -p "$PASSWORD" scp -rv ~/tgbot_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
+  sshpass -p "$PASSWORD" scp -rv ~/builds/auth_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
+  sshpass -p "$PASSWORD" scp -rv ~/builds/fetch_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
+  sshpass -p "$PASSWORD" scp -rv ~/builds/resource_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
+  sshpass -p "$PASSWORD" scp -rv ~/builds/notify_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
+  sshpass -p "$PASSWORD" scp -rv ~/builds/clean_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
+#  sshpass -p "$PASSWORD" scp -rv ~/builds/tag_measurements_web_ng.tar $USERNAME@$REMOTE_IP:/mnt/datasource
+  sshpass -p "$PASSWORD" scp -rv ~/builds/tgbot_service.tar $USERNAME@$REMOTE_IP:/mnt/datasource
 fi
 

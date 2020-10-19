@@ -14,7 +14,9 @@ import ru.tagmeasurements.fetch_service.repositories.TagManagerRepository;
 import ru.tagmeasurements.fetch_service.utils.HttpHelpers;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TagManagerService {
@@ -67,10 +69,25 @@ public class TagManagerService {
   public void storeTagManagers(CloudHttpClient httpClient) {
     log.info("Store fetched data to database");
     var databaseTagManagers = repository.findAllByEmail(httpClient.getAccount().getEmail());
-    httpClient.getTagManagerList().removeAll(databaseTagManagers);
-    if (httpClient.getTagManagerList().size() > 0) {
-      log.info("Store tag managers to database");
-      repository.saveAll(httpClient.getTagManagerList());
+    var databaseTagManagerSet = new HashSet<>(databaseTagManagers);
+    var cloudTagManagerSet = new HashSet<>(httpClient.getTagManagerList());
+    var removed = databaseTagManagerSet.stream().filter(tagManager -> {
+      for (var cloudTagManager: cloudTagManagerSet) {
+        if (cloudTagManager.getMac().equals(tagManager.getMac()))
+          return false;
+      }
+      return true;
+    }).collect(Collectors.toCollection(HashSet::new));
+    if (removed.size() > 0) {
+      log.info(String.format("Delete %d unused tag managers.", removed.size()));
+      removed.forEach(tm -> {
+        repository.deleteById(tm.getMac());
+      });
+    }
+
+    if (cloudTagManagerSet.size() > 0) {
+      log.info((String.format("Store %d tag managers to database", cloudTagManagerSet.size())));
+      repository.saveAll(cloudTagManagerSet);
     }
   }
 }

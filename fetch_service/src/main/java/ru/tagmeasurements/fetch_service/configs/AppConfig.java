@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import ru.tagmeasurements.fetch_service.utils.LocalDateAdapter;
 
 import java.time.LocalDate;
@@ -33,5 +34,11 @@ public class AppConfig {
     executor.setThreadNamePrefix("WstSync-");
     executor.initialize();
     return executor;
+  }
+  @Bean
+  public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+    ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+    threadPoolTaskScheduler.setPoolSize(2);
+    return threadPoolTaskScheduler;
   }
 }

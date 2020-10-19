@@ -49,11 +49,11 @@ func (tr TagRepository) GetTagsByUUID(uuid string) ([]models.Tag, error) {
 	return tags, nil
 }
 
-func (tr TagRepository) UpdateTag(tag models.Tag) (models.Tag, error) {
+func (tr TagRepository) UpdateTag(tag models.Tag, uuid string) (models.Tag, error) {
 	var tagDb models.Tag
-	tr.DataSource.Preload("TemperatureZones").First(&tagDb, tag.UUID)
+	tr.DataSource.Preload("TemperatureZones").Where("uuid = ?", uuid).First(&tagDb)
 	tagDb.VerificationDate = tag.VerificationDate
-	tr.DataSource.Save(&tagDb)
+	tr.DataSource.Updates(&tagDb)
 
 	return tagDb, nil
 }

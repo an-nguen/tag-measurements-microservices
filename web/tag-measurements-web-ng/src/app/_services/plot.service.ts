@@ -165,7 +165,7 @@ export class PlotService {
                 mode: 'lines+markers',
                 yDataType: null,
                 hovertemplate: "<b>%{fullData.name}</b>" +
-                  "<br><b>Время</b>: %{x|%d.%m.%Y %H:%m}<br>",
+                  "<br><b>Время</b>: %{x|%d.%m.%Y %H:%M}<br>",
               };
               if (dataType === 'temperature') {
                 newData.yDataType = 'temperature';

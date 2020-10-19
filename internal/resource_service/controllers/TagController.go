@@ -50,7 +50,7 @@ func (c TagController) GetTags(ctx *gin.Context) {
 }
 
 func (c TagController) UpdateTag(ctx *gin.Context) {
-	uuid := ctx.Param("uuid")
+	uuid := ctx.Param("id")
 	var err error = nil
 
 	var jsonReq models.Tag
@@ -60,8 +60,7 @@ func (c TagController) UpdateTag(ctx *gin.Context) {
 	}
 
 	log.Info(fmt.Sprintf("Attempt to update tag with uuid %d.", uuid))
-	jsonReq.UUID = uuid
-	jsonReq, err = c.Repository.UpdateTag(jsonReq)
+	jsonReq, err = c.Repository.UpdateTag(jsonReq, uuid)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

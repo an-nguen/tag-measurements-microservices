@@ -15,8 +15,7 @@ import ru.tagmeasurements.fetch_service.repositories.TagRepository;
 import ru.tagmeasurements.fetch_service.utils.HttpHelpers;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -95,9 +94,25 @@ public class TagService {
         tagList.addAll(tags);
       }
     }
-    cloudClient.getTagList().removeAll(tagList);
+    var databaseTagSet = new HashSet<>(tagList);
+    var cloudTagSet = new HashSet<>(cloudClient.getTagList());
+    // tags to remove
+    var removed = databaseTagSet.stream().filter(t -> {
+      for (var tag: cloudTagSet) {
+        if (t.getUuid().equals(tag.getUuid()))
+          return false;
+      }
+      return true;
+    }).collect(Collectors.toCollection(HashSet::new));
+    if (removed.size() > 0) {
+      log.info(String.format("Delete removed %d database tags", removed.size()));
+      removed.forEach(t -> {
+        repository.deleteById(t.getUuid());
+      });
+    }
+
     var databaseTags = repository.findAll();
-    for (var tag: cloudClient.getTagList()) {
+    for (var tag: cloudTagSet) {
       var found = databaseTags.stream()
         .filter(databaseTag -> databaseTag.getUuid().equals(tag.getUuid()))
         .findFirst();
@@ -107,9 +122,10 @@ public class TagService {
         tag.setVerificationDate(LocalDate.now());
       });
     }
-    if (cloudClient.getTagList().size() > 0) {
-      log.info("Store tags to database");
-      repository.saveAll(cloudClient.getTagList());
+
+    if (cloudTagSet.size() > 0) {
+      log.info(String.format("Store %d tags to database", cloudTagSet.size()));
+      repository.saveAll(cloudTagSet);
     }
   }
 }
