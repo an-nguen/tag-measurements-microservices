@@ -14,14 +14,13 @@ RUN adduser \
     --uid "${UID}" \
     "${USER}"
 
-
 WORKDIR /go/src/
 COPY . .
 
 RUN go mod download
 RUN go mod verify
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o fetch_service cmd/fetch_service/main.go
-RUN readlink -f fetch_service
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o fetch_service_ cmd/fetch_service/main.go
+RUN readlink -f fetch_service_
 
 FROM scratch
 
@@ -29,12 +28,11 @@ FROM scratch
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
 
-COPY --from=builder /go/src/fetch_service /go/src/fetch_service
+COPY --from=builder /go/src/fetch_service_ /go/src/fetch_service_
 COPY --from=builder /go/src/configs/config_fetch.json.prod /go/src/configs/config_fetch.json
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 WORKDIR /go/src/
-
 # Use an unprivileged user.
 USER appuser:appuser
 
-CMD ["/go/src/fetch_service"]
+CMD ["/go/src/fetch_service_"]

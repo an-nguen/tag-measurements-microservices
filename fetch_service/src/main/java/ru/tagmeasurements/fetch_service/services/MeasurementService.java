@@ -60,8 +60,10 @@ public class MeasurementService {
               // Send request
               request.setIds(Collections.singletonList(tagSlaveId));
               // Latest added record by uuid
-//              var latestRecord = repository.getFirstByTagUUIDOrderByDateDesc(cloudTag.getUuid());
-              var fromDate = LocalDateTime.now().minus(75, ChronoUnit.DAYS);
+              var latestRecord = repository.getFirstByTagUUIDOrderByDateDesc(cloudTag.getUuid());
+              var fromDate = (latestRecord != null) ?
+                latestRecord.getDate()
+                : LocalDateTime.now().minus(75, ChronoUnit.DAYS);
               request.setFromDate(fromDate.toLocalDate());
               request.setToDate(LocalDate.now());
               request.setType(type);

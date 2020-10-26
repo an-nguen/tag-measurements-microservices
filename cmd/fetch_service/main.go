@@ -9,9 +9,7 @@ import (
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
-	"tag-measurements-microservices/internal/fetch_service/api"
 	"tag-measurements-microservices/internal/fetch_service/structures"
-	"tag-measurements-microservices/internal/fetch_service/types"
 	"tag-measurements-microservices/pkg/datasource"
 )
 
@@ -33,34 +31,20 @@ func main() {
 func mainLoop(app *structures.App) {
 	var wg sync.WaitGroup
 
+	app.DataDb = datasource.InitDatabaseConnection(app.Config.Host, app.Config.Port,
+		app.Config.User, app.Config.Password, app.Config.DbName)
 	for {
-		app.DataDb = datasource.InitDatabaseConnection(app.Config.Host, app.Config.Port,
-			app.Config.User, app.Config.Password, app.Config.DbName)
 		app.InitCloudClients()
-		app.StoreTagManagers()
+
 		log.Info("Begin to fetch measurements")
 		for _, client := range app.CloudClients {
-			clientFetch(app, client, &wg)
+			go client.StoreRealTimeMeasurements(&wg)
+			wg.Add(1)
 		}
+		wg.Wait()
 		log.Info("Wait for goroutines")
 		log.Info("End of fetching measurements. Wait for next iteration")
 
-		time.Sleep(30 * time.Second)
+		time.Sleep(60 * time.Second)
 	}
-}
-
-func clientFetch(app *structures.App, cloudClient api.CloudClient, wg *sync.WaitGroup) {
-	/** Fetch tags with all information **/
-	tags := cloudClient.GetTags()
-	if tags == nil {
-		return
-	}
-	cloudClient.Tags = tags
-	cloudClient.StoreTags(app.DataDb)
-
-	cloudClient.GetMeasurements(types.Temperature, app.Config.NDays)
-	cloudClient.GetMeasurements(types.Humidity, app.Config.NDays)
-	cloudClient.GetMeasurements(types.BatteryVoltage, app.Config.NDays)
-	cloudClient.GetMeasurements(types.Signal, app.Config.NDays)
-	cloudClient.Store(app.DataDb)
 }

@@ -8,6 +8,7 @@ import {LoadingService} from './loading.service';
 import {vh} from '../_utils/conv';
 import {SelectionModel} from '@angular/cdk/collections';
 import {Measurement} from "../_domains/measurement";
+import {MeasurementRtService} from "./measurement-rt.service";
 
 
 @Injectable({
@@ -65,11 +66,13 @@ export class PlotService {
   public endDate = moment().subtract(-1, 'day');
   public selectType: string;
   public withoutApproximation: boolean = false;
+  public withoutRT: boolean = false;
   private srcData = [];
   mainPlot: any;
 
   constructor(
     private measurementService: MeasurementService,
+    private measurementRtService: MeasurementRtService,
     private routingService: RoutingService,
     private loadingService: LoadingService,
     private errorNotifyService: ErrorNotifyService,
@@ -117,9 +120,10 @@ export class PlotService {
         epsilon = 0.3
       }
     }
+    const service = (this.withoutRT === false) ? this.measurementService : this.measurementRtService;
 
     if (dataType) {
-      this.measurementService.getTemperatureDataByUUID(uuidList,
+      service.getTemperatureDataByUUID(uuidList,
         this.startDate.toISOString(),
         this.endDate.toISOString(),
         epsilon,
@@ -200,7 +204,7 @@ export class PlotService {
                 }
               });
               response.forEach(tempData => {
-                tempData.date = new Date(tempData.date);
+                tempData.date = moment(new Date(tempData.date), 'Europe/Moscow').toDate();
                 if (tag.uuid === tempData.tag_uuid) {
 
                   const x = tempData.date;

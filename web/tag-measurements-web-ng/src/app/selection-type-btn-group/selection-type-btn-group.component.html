@@ -1,36 +1,39 @@
 <div class="full-width">
-    <mat-checkbox color="primary" (change)="plotService.withoutApproximation = $event.checked">
-        Без аппроксимации
-    </mat-checkbox>
-    <div class="full-width">
-        <mat-button-toggle-group name="selectGroup" [(ngModel)]="plotService.selectType" aria-label="Select Type" required>
-            <mat-button-toggle value="lastDay">За день</mat-button-toggle>
-            <mat-button-toggle value="lastWeek">За неделю</mat-button-toggle>
-            <mat-button-toggle value="lastMonth">За месяц</mat-button-toggle>
-            <mat-button-toggle value="period">За определённый период</mat-button-toggle>
-            <mat-button-toggle value="certainDay">За определённый день</mat-button-toggle>
-        </mat-button-toggle-group>
-    </div>
-    <ng-container *ngIf="plotService.selectType === 'period'">
-        <mat-form-field appearance="outline">
-            <mat-label>Начальный интервал</mat-label>
-            <input matInput [matDatepicker]="startDatepicker" [(ngModel)]="plotService.startDate" [readOnly] name="startDateValue"/>
-            <mat-datepicker-toggle matSuffix [for]="startDatepicker"></mat-datepicker-toggle>
-            <mat-datepicker #startDatepicker></mat-datepicker>
-        </mat-form-field>
-        <mat-form-field appearance="outline">
-            <mat-label>Конечный интервал</mat-label>
-            <input matInput [matDatepicker]="endDatepicker" [(ngModel)]="plotService.endDate" [readOnly] name="endDateValue"/>
-            <mat-datepicker-toggle matSuffix [for]="endDatepicker"></mat-datepicker-toggle>
-            <mat-datepicker #endDatepicker></mat-datepicker>
-        </mat-form-field>
-    </ng-container>
-    <ng-container *ngIf="plotService.selectType === 'certainDay'">
-        <mat-form-field appearance="outline">
-            <mat-label>День</mat-label>
-            <input matInput [matDatepicker]="certainDayDatepicker" [(ngModel)]="plotService.certainDay" [readOnly] name="certainDayValue"/>
-            <mat-datepicker-toggle matSuffix [for]="certainDayDatepicker"></mat-datepicker-toggle>
-            <mat-datepicker #certainDayDatepicker></mat-datepicker>
-        </mat-form-field>
-    </ng-container>
+  <mat-checkbox color="primary" (change)="plotService.withoutApproximation = $event.checked">
+    Без аппроксимации
+  </mat-checkbox>
+  <mat-checkbox color="primary" (change)="plotService.withoutRT = $event.checked">
+    Из API
+  </mat-checkbox>
+  <div class="full-width">
+    <mat-button-toggle-group name="selectGroup" [(ngModel)]="plotService.selectType" aria-label="Select Type" required>
+      <mat-button-toggle value="lastDay">За день</mat-button-toggle>
+      <mat-button-toggle value="lastWeek">За неделю</mat-button-toggle>
+      <mat-button-toggle value="lastMonth">За месяц</mat-button-toggle>
+      <mat-button-toggle value="period">За определённый период</mat-button-toggle>
+      <mat-button-toggle value="certainDay">За определённый день</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+  <ng-container *ngIf="plotService.selectType === 'period'">
+    <mat-form-field appearance="outline">
+      <mat-label>Начальный интервал</mat-label>
+      <input matInput [matDatepicker]="startDatepicker" [(ngModel)]="plotService.startDate" [readOnly] name="startDateValue"/>
+      <mat-datepicker-toggle matSuffix [for]="startDatepicker"></mat-datepicker-toggle>
+      <mat-datepicker #startDatepicker></mat-datepicker>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Конечный интервал</mat-label>
+      <input matInput [matDatepicker]="endDatepicker" [(ngModel)]="plotService.endDate" [readOnly] name="endDateValue"/>
+      <mat-datepicker-toggle matSuffix [for]="endDatepicker"></mat-datepicker-toggle>
+      <mat-datepicker #endDatepicker></mat-datepicker>
+    </mat-form-field>
+  </ng-container>
+  <ng-container *ngIf="plotService.selectType === 'certainDay'">
+    <mat-form-field appearance="outline">
+      <mat-label>День</mat-label>
+      <input matInput [matDatepicker]="certainDayDatepicker" [(ngModel)]="plotService.certainDay" [readOnly] name="certainDayValue"/>
+      <mat-datepicker-toggle matSuffix [for]="certainDayDatepicker"></mat-datepicker-toggle>
+      <mat-datepicker #certainDayDatepicker></mat-datepicker>
+    </mat-form-field>
+  </ng-container>
 </div>

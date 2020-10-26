@@ -29,18 +29,18 @@ Main purpose:
 App architecture:
 
                                               +----------+
-                                           +--+Notify SRV|
-                                           |  +----------+
-    +-----------------+            +----+  |                 +------+
-    |                 |            |    +<-+ +---------+     | User |
+    +-----------------+                    +--+Notify SRV|
+    |  Fetch Service  |                    |  +----------+
+    | Real Time Spring+            +----+  |                 +------+
+    +-----------------+----------->+    +<-+ +---------+     | User |
     |  Fetch Service  +----------->| DB +<---|Clean SRV|     |  DB  |
     +-----------------+   INSERT   +--+-+    +---------+     +---+--+
              ˄                        |                          ˄
              |JSON             FETCH  |                    FETCH ˅ MODIFY
-             |                  +-----˅-----+              +-----+----+
-         Data from              |ResourceSRV|              | Auth SRV |
-           cloud                +-----+-----+              +----+-----+
-                                      ˄                         ˄ 
+       +-----+-----+            +-----˅-----+              +-----+----+
+       | Data from |            |ResourceSRV|              | Auth SRV |
+       |   cloud   |            +-----+-----+              +----+-----+
+       +-----------+                  ˄                         ˄ 
                                       |                         |
                                       ˅       User credentials  |
                                    Client<----------------------+
@@ -48,25 +48,26 @@ App architecture:
                  
 # Purpose of services
 
-## Fetch service
-Fetch service should fetch N measurements from cloud service.  
-It should also synchronize tag managers and tags.  
+## Fetch service (Golang version)
+Fetch service should fetch measurements every N time from cloud service.  
 The main loop logic:
 
                                                                      +-----------------------------------+
-                                                           mainLoop()|                                   |
+                                                           mainLoop()|      get session ids              |
      +---------+   +-------------------+   +--------------------+    ˅  +--------------------+           |
      |  Start  +-->| Create app struct +-->+ Init db connection |------->  Init WST clients  +-------+   |
      +---------+   +-------------------+   +--------------------+       +--------------------+       |   |
-                           +---------------+    new   +------------------------+                     ˅   |
-                           |  Client loop  +<---------+  Iterate WST clients   +<--------------------+   |
-                           +---+--+--------+  thread  +------------------------+                         |
-                               |                                                                         |
-                               |   +----------------------+   +------------------+                       |
-                               +-->+ Sync tags and TagMgr +-->+ StoreMeasurement +-----------------------+
-                                   +-----+----------------+   +------------------+
+                                                new   +------------------------+                     ˅   |
+                               +----------------------+  Iterate WST clients   +<--------------------+   |
+                               |              thread  +------------------------+                         |
+                               |                                 /api/GetTagList                         |
+                               |                              +------------------+                       |
+                               +----------------------------->+ StoreMeasurement +-----------------------+
+                                                              +------------------+
 
-                                                                                      
+
+## Fetch service (Java version)
+That fetch service should fetch data from N to M date and sync data.                                    
                                             
 ## Resource service
 Resource service provides API that allow fetching data from datasource.
@@ -80,7 +81,7 @@ Implemented 8 http endpoints:
  url parameters: 
     - mac - string value, MAC address of his tag manager (optional)
  - /api/temperatureZones  
- GET - return array of warehouse groups (require ADMIN role)
+ GET - return array of temperature zones (require ADMIN role)
  POST - create zone (require ADMIN role)
  PUT  - update zone (require ADMIN role)
  DELETE - delete zone (require ADMIN ROLE)
@@ -95,11 +96,11 @@ Implemented 8 http endpoints:
     }
     
     
- PUT - edit warehouse group -> /api/warehouseGroup/{id:[0-9]+} (require ADMIN role)
+ PUT - edit warehouse group -> /api/temperatureZones/{id:[0-9]+} (require privilege)
  - /api/measurements?uuidList=[... , ...]&startDate=...&endDate=...&epsilon=...
  GET - uuidList, startDate and endDate query parameters required. The epsilon parameter is optional.
- - /api/voltageTagData - similarly with temperatureTags
- - /api/signalTagData - similarly with temperatureTags
+ - /api/measurementsRT?uuidList=[... , ...]&startDate=...&endDate=...&epsilon=...
+ GET - uuidList, startDate and endDate query parameters required. The epsilon parameter is optional.
  - /api/users - admin only - CRUD operations  
  
 ## Authentication service
@@ -115,7 +116,7 @@ If records were found service send mail to emails that specified in models.Tempe
 
 ## Frontend
 On the main page should be displayed group of tag managers and tags   
-with select opportunity (checkbox), and display plot Temperature(timestamp).  
+with select opportunity (checkbox), and display plot Temperature(timestamp), Humidity(timestamp), Voltage(timestamp), Signal(timestamp).  
 Also, should be settings page that user can define fetch an interval of each tag manager.
 
 ## Project Structure
@@ -126,19 +127,32 @@ Also, should be settings page that user can define fetch an interval of each tag
     ├── cmd                     # go main files
     │   ├── auth_service       
     │   ├── clean_service       
-    │   ├── fetch_service       
-    │   └── resource_service
+    │   ├── fetch_service       # reserve fetch service
+    │   ├── notify_service       
+    │   ├── resource_service    
+    │   └── tgbot_service
     ├── configs                 # json configs for go applications
+    ├── fetch_service           # main fetch service on Spring Boot
     ├── internal                # internal (not reuse) go files
+    │   ├── auth_service
+    │   │   ├── controllers
+    │   │   └── structures
+    │   ├── clean_service
+    │   │   └── structures
     │   ├── fetch_service
     │   │   ├── api
-    │   │   ├── dto
+    │   │   ├── structures
+    │   │   └── types
+    │   ├── notify_service
     │   │   └── structures
     │   └── resource_service
-    │       ├── controllers
+    │   │   ├── controllers
+    │   │   └── structures
+    │   ├── tgbot_service
     │       └── structures
     ├── pkg                     # common files (reusable)
     │   ├── datasource
+    │   ├── dto
     │   ├── models
     │   ├── repository
     │   └── utils
@@ -150,19 +164,17 @@ Also, should be settings page that user can define fetch an interval of each tag
 
 
 
-# User wishes
-- User manager (admin page)
-- Editing role privileges (displaying specified columns) 
-
 # How to build (docker)
  ${ROOT} - project directory
  Backend  - Launch shell-script docker_commands.sh in ${ROOT}/build path to build golang services and docker images.  
  Frontend - Launch shell-script build_save.sh in ${ROOT}/web/thermo-ng path to build Angular app and docker image.
-
+ Fetch Service on Java (Spring Boot) - run in ${ROOT}/fetch_service docker build
+ 
 # Code of conduct
 The main programming languages to implement that system can be:
  - Python 2/3 (PEP8)
  - Go (Standard name convention)
- - Pure JS (ES6) or JS framework (Angular)
+ - Java (Java naming convention)
+ - Pure JS (ES6) or JS framework (TypeScript) (Angular)
  
 Also, contributor should add commentaries to functions, methods and obscure code.

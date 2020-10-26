@@ -55,7 +55,7 @@ public class TagService {
     return result;
   }
 
-  private GetTagListResponse getTagListResponse(String sessionId) {
+  GetTagListResponse getTagListResponse(String sessionId) {
     var response = client.post("/ethClient.asmx/GetTagList",
       "{}", HttpHelpers.getHttpHeaders(sessionId));
     return gson.fromJson(response.getBody(), GetTagListResponse.class);
@@ -124,7 +124,7 @@ public class TagService {
     }
 
     if (cloudTagSet.size() > 0) {
-      log.info(String.format("Store %d tags to database", cloudTagSet.size()));
+//      log.info(String.format("Store %d tags to database", cloudTagSet.size()));
       repository.saveAll(cloudTagSet);
     }
   }

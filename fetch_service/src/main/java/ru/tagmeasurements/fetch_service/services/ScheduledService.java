@@ -14,6 +14,7 @@ public class ScheduledService {
   private final TagService tagService;
   private final TagManagerService tagManagerService;
   private final MeasurementService measurementService;
+  private final MeasurementRTService measurementRTService;
   private final WirelessTagAccountService wirelessTagAccountService;
   private final String[] types = {
     "temperature", "cap", "batteryVolt", "signal"
@@ -23,15 +24,15 @@ public class ScheduledService {
   public ScheduledService(TagService tagService,
                           TagManagerService tagManagerService,
                           MeasurementService measurementService,
-                          WirelessTagAccountService wirelessTagAccountService) {
+                          MeasurementRTService measurementRTService, WirelessTagAccountService wirelessTagAccountService) {
     this.tagService = tagService;
     this.tagManagerService = tagManagerService;
     this.measurementService = measurementService;
+    this.measurementRTService = measurementRTService;
     this.wirelessTagAccountService = wirelessTagAccountService;
   }
-  @Scheduled(fixedDelay = 15000)
+  @Scheduled(fixedDelay = 60000)
   private void clientFetchMeasurements() {
-    log.info("Begin client fetch measurements");
     var accounts = wirelessTagAccountService.findAll();
     for (var account: accounts) {
       var client = new CloudHttpClient(account);
@@ -40,12 +41,10 @@ public class ScheduledService {
       client.setTagList(tagService.getTags(client));
       measurementService.storeMeasurements(client.getTagManagerList(), types);
     }
-    log.info("End client fetch measurements");
   }
 
-  @Scheduled(fixedDelay = 15000)
+  @Scheduled(fixedDelay = 300000)
   private void clientFetchTagsAndTagManagers() {
-    log.info("Begin client fetch tags and tag managers");
     var accounts = wirelessTagAccountService.findAll();
     for (var account: accounts) {
       var client = new CloudHttpClient(account);
@@ -55,7 +54,16 @@ public class ScheduledService {
       tagService.storeTags(client, tagManagerService.findAllByEmail(client.getAccount().getEmail()));
       tagManagerService.storeTagManagers(client);
     }
-    log.info("End client fetch tags and tag managers");
   }
 
+//  @Scheduled(fixedDelay = 40000)
+//  private void clientFetchMeasurementsRT() {
+//    var accounts = wirelessTagAccountService.findAll();
+//    for (var account: accounts) {
+//      var client = new CloudHttpClient(account);
+//      client.setSessionId(tagManagerService.getSessionId(client.getAccount()));
+//      client.setTagManagerList(tagManagerService.getTagManagers(client));
+//      measurementRTService.storeMeasurements(client);
+//    }
+//  }
 }

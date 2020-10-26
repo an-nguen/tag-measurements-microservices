@@ -8,9 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(exclude = {JacksonAutoConfiguration.class})
 @EnableScheduling
 public class FetchServiceApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(FetchServiceApplication.class, args);
 	}
-
 }

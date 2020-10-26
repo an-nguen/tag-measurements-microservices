@@ -11,6 +11,43 @@ type Point struct {
 	y float64
 }
 
+func DouglasPeuckerMeasurementRT(list []models.MeasurementRT, epsilon float64, t string) []models.MeasurementRT {
+	if list == nil {
+		return []models.MeasurementRT{}
+	}
+	if len(list) == 0 {
+		return []models.MeasurementRT{}
+	}
+
+	dMax := 0.0
+	index := 0
+	end := len(list) - 1
+	for i := 1; i < end; i++ {
+		d := perpendicularDistanceMeasurementRT(list[i], list[0], list[end], t)
+		if d > dMax {
+			index = i
+			dMax = d
+		}
+	}
+
+	var res []models.MeasurementRT
+
+	if dMax > epsilon {
+		recResults1 := DouglasPeuckerMeasurementRT(list[:index+1], epsilon, t)
+		recResults2 := DouglasPeuckerMeasurementRT(list[index:end], epsilon, t)
+
+		res = append(res, recResults1[:len(recResults1)-1]...)
+		res = append(res, recResults2...)
+		if len(res) < 2 {
+			panic("Problem assembling output")
+		}
+	} else {
+		res = nil
+		res = append(res, list[0], list[end])
+	}
+	return res
+}
+
 func DouglasPeuckerMeasurement(list []models.Measurement, epsilon float64, t string) []models.Measurement {
 	if list == nil {
 		return []models.Measurement{}
@@ -46,6 +83,36 @@ func DouglasPeuckerMeasurement(list []models.Measurement, epsilon float64, t str
 		res = append(res, list[0], list[end])
 	}
 	return res
+}
+
+func perpendicularDistanceMeasurementRT(pt models.MeasurementRT, lineStart models.MeasurementRT, lineEnd models.MeasurementRT, t string) float64 {
+	dx := float64(lineEnd.Date.Unix() - lineStart.Date.Unix())
+	dy := 0.0
+	if t == "temperature" {
+		dy = lineEnd.Temperature - lineStart.Temperature
+	} else if t == "humidity" {
+		dy = lineEnd.Humidity - lineStart.Humidity
+	} else if t == "batteryVolt" {
+		dy = lineEnd.Voltage - lineStart.Voltage
+	} else if t == "signal" {
+		dy = lineEnd.Signal - lineStart.Signal
+	}
+
+	mag := math.Pow(math.Pow(dx, 2.0)+math.Pow(dy, 2.0), 0.5)
+	if mag > 0.0 {
+		dx /= mag
+		dy /= mag
+	}
+
+	pvx := float64(pt.Date.Unix() - lineStart.Date.Unix())
+	pvy := pt.Temperature - lineStart.Temperature
+
+	pvdot := dx*pvx + dy*pvy
+
+	ax := pvx - pvdot*dx
+	ay := pvy - pvdot*dy
+
+	return math.Pow(math.Pow(ax, 2.0)+math.Pow(ay, 2.0), 0.5)
 }
 
 func perpendicularDistanceMeasurement(pt models.Measurement, lineStart models.Measurement, lineEnd models.Measurement, t string) float64 {

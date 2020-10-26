@@ -41,14 +41,14 @@ func (app *App) InitCloudClients() {
 		})
 		if err != nil {
 			log.Error("Failed to get session id.")
-			time.Sleep(3 * time.Minute)
+			time.Sleep(10 * time.Minute)
 			app.InitCloudClients()
 			return
 		}
 		tagManagers, err := api.GetTagManagersApi(sessionId, "http://wirelesstag.net", tmpClient)
 		if err != nil {
 			log.Error("Failed to get tag managers.")
-			time.Sleep(3 * time.Minute)
+			time.Sleep(10 * time.Minute)
 			app.InitCloudClients()
 			return
 		}
@@ -66,7 +66,7 @@ func (app *App) InitCloudClients() {
 			err = wstClient.SelectTagManager(tm.Mac)
 			if err != nil {
 				log.Error("Failed to select tag manager.")
-				time.Sleep(3 * time.Minute)
+				time.Sleep(10 * time.Minute)
 				app.InitCloudClients()
 				return
 			}

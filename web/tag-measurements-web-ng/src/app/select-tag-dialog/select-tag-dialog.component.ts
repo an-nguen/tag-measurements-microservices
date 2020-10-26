@@ -4,13 +4,9 @@ import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {PlotService} from '../_services/plot.service';
 import {MAT_MOMENT_DATE_FORMATS, MomentDateAdapter} from '@angular/material-moment-adapter';
 import {DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE} from '@angular/material/core';
-import {ErrorNotifyService} from '../_services/error-notify.service';
-import {LoadingService} from '../_services/loading.service';
 import {MatSort} from '@angular/material/sort';
 import {MatTableDataSource} from '@angular/material/table';
 import {MatInput} from "@angular/material/input";
-import {MatButtonToggleGroup} from "@angular/material/button-toggle";
-import * as moment from "moment";
 
 export interface SelectTagDialogData {
   tags: Tag[];

@@ -39,6 +39,15 @@ CREATE TABLE public.measurement (
                                  tag_uuid UUID NOT NULL
 );
 
+CREATE TABLE public.measurement_rt (
+                                    id serial primary key,
+                                    date timestamp default current_timestamp,
+                                    temperature DOUBLE PRECISION,
+                                    humidity DOUBLE PRECISION,
+                                    voltage DOUBLE PRECISION,
+                                    signal DOUBLE PRECISION,
+                                    tag_uuid UUID NOT NULL
+);
 
 CREATE INDEX measurement_timestamp_tag_uuid_index ON public.measurement (date DESC, tag_uuid);
 

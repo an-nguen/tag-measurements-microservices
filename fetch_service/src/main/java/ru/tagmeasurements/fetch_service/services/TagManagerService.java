@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.tagmeasurements.fetch_service.dtos.GetTagManagersResponse;
-import ru.tagmeasurements.fetch_service.dtos.SelectTagManagerRequest;
 import ru.tagmeasurements.fetch_service.models.CloudHttpClient;
 import ru.tagmeasurements.fetch_service.models.TagManager;
 import ru.tagmeasurements.fetch_service.models.WirelessTagAccount;
@@ -67,7 +66,7 @@ public class TagManagerService {
   }
 
   public void storeTagManagers(CloudHttpClient httpClient) {
-    log.info("Store fetched data to database");
+//    log.info("Store fetched data to database");
     var databaseTagManagers = repository.findAllByEmail(httpClient.getAccount().getEmail());
     var databaseTagManagerSet = new HashSet<>(databaseTagManagers);
     var cloudTagManagerSet = new HashSet<>(httpClient.getTagManagerList());
@@ -79,14 +78,14 @@ public class TagManagerService {
       return true;
     }).collect(Collectors.toCollection(HashSet::new));
     if (removed.size() > 0) {
-      log.info(String.format("Delete %d unused tag managers.", removed.size()));
+//      log.info(String.format("Delete %d unused tag managers.", removed.size()));
       removed.forEach(tm -> {
         repository.deleteById(tm.getMac());
       });
     }
 
     if (cloudTagManagerSet.size() > 0) {
-      log.info((String.format("Store %d tag managers to database", cloudTagManagerSet.size())));
+//      log.info((String.format("Store %d tag managers to database", cloudTagManagerSet.size())));
       repository.saveAll(cloudTagManagerSet);
     }
   }

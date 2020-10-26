@@ -25,10 +25,12 @@ var tagController = controllers.TagController{
 var tagManagerController = controllers.TagManagerController{
 	Repository: repository.TagManagerRepository{DataSource: db},
 }
-var tagTempDataController = controllers.MeasurementController{
+var measurementController = controllers.MeasurementController{
 	Repository: repository.MeasurementRepository{DataSource: db},
 }
-
+var measurementRTController = controllers.MeasurementRTController{
+	Repository: repository.MeasurementRTRepository{DataSource: db},
+}
 var temperatureZoneController = controllers.TemperatureZoneController{
 	Repository: repository.WarehouseGroupRepository{DataSource: db},
 }
@@ -88,8 +90,13 @@ func main() {
 	}
 	measurementAPI := api.Group("/measurements")
 	{
-		measurementAPI.GET("", tagTempDataController.GetMeasurementsByUUID)
-		measurementAPI.GET("/csv", tagTempDataController.GetMeasurementsCSVByUUID)
+		measurementAPI.GET("", measurementController.GetMeasurementsByUUID)
+		measurementAPI.GET("/csv", measurementController.GetMeasurementsCSVByUUID)
+	}
+	measurementRTAPI := api.Group("/measurementsRT")
+	{
+		measurementRTAPI.GET("", measurementRTController.GetMeasurementsByUUID)
+		measurementRTAPI.GET("/csv", measurementRTController.GetMeasurementsCSVByUUID)
 	}
 	temperatureZoneAPI := api.Group("/temperatureZones")
 	{
